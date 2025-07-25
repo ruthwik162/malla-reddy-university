@@ -44,7 +44,6 @@ import heroHostel from './heroHostel.jpg'
 import heroMru from './heroMru.jpg'
 import mruhero1 from './mruhero1.png'
 import mallareddy from './Malla Reddy.png'
-import vsk from './vsk_Reddy.png'
 import hoste_girls from './hoste_girls.png'
 import hostel_boys from './hostel_boys.png';
 import delete_icon from './delete.png' 
@@ -59,7 +58,6 @@ export const assets = {
     delete_icon,
     hostel_boys,
     hoste_girls,
-    vsk,
     mallareddy,
     mruhero1,
     mrulogo,
