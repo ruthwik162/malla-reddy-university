@@ -15,6 +15,7 @@ import {
   FiChevronUp
 } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
+import { useAppContext } from '../AppContext/AppContext';
 
 const AdminBlockPage = () => {
   const { blockId } = useParams();
@@ -25,6 +26,7 @@ const AdminBlockPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedPlans, setExpandedPlans] = useState({});
   const [filterOccupied, setFilterOccupied] = useState('all');
+  const {url} = useAppContext();
 
   const blockRooms = block?.rooms?.filter(b => b.occupied).length || 0;
   const totalRooms = block?.rooms?.length || 0;
@@ -33,7 +35,7 @@ const AdminBlockPage = () => {
 const fetchBlock = async () => {
   try {
     setLoading(true);
-    const res = await axios.get(`http://localhost:8087/user/blocks/room-details/${blockId}`);
+    const res = await axios.get(`${url}/user/blocks/room-details/${blockId}`);
     
     if (res.data && res.data.blockId === blockId) {
       setBlock(res.data);

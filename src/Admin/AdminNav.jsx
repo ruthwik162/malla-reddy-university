@@ -12,6 +12,7 @@ const AdminNav = () => {
 
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const  {url} = useAppContext();
 
     const { user, setUser, navigate, logout } = useAppContext();
 
@@ -21,7 +22,7 @@ const AdminNav = () => {
             const username = localStorage.getItem("username");
             if (!user && username) {
                 try {
-                    const res = await fetch("http://localhost:8087/user/all");
+                    const res = await fetch(`${url}/user/all`);
                     const data = await res.json();
                     const currentUser = data.find(u => u.username === username);
                     if (currentUser) {
@@ -41,7 +42,7 @@ const AdminNav = () => {
 
             if (!user && email) {
                 try {
-                    const res = await fetch(`http://localhost:8087/user/profile?email=${email}`);
+                    const res = await fetch(`${url}/user/profile?email=${email}`);
                     const data = await res.json();
                     setUser(data);
                 } catch (err) {

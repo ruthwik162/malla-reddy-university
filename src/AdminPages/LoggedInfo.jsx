@@ -5,11 +5,11 @@ import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { assets } from '../assets/assets';
 import { Link } from 'react-router-dom';
+import { useAppContext } from '../AppContext/AppContext';
 
 const COLORS = ['#6366f1', '#c7d2fe'];
 const COLORS_SECONDARY = ['#10b981', '#a7f3d0'];
 const TOTAL_ROOM_CAPACITY = 400;
-
 const fadeInUp = {
   hidden: { opacity: 0, y: 50 },
   visible: {
@@ -112,11 +112,13 @@ const LoggedInfo = () => {
     students: true,
     messages: true
   });
+  const {url} = useAppContext();
+
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axios.get('http://localhost:8087/user/all');
+        const res = await axios.get(`${url}/user/all`);
         const filteredStudents = res.data.filter((user) => user.role !== 'admin' && user.roomId );
         setStudents(filteredStudents);
       } catch (error) {
@@ -131,7 +133,7 @@ const LoggedInfo = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await axios.get('http://localhost:8087/user/contactus');
+        const res = await axios.get(`${url}/user/contactus`);
         setMessages(res.data);
       } catch (error) {
         toast.error('Failed to fetch messages');
@@ -162,7 +164,7 @@ const LoggedInfo = () => {
   const deleteUser = async (id) => {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
     try {
-      await axios.delete(`http://localhost:8087/user/register/${id}`);
+      await axios.delete(`${url}/user/register/${id}`);
       setStudents((prev) => prev.filter((student) => student.id !== id));
       toast.success('User deleted successfully');
     } catch {
@@ -172,7 +174,7 @@ const LoggedInfo = () => {
 
   const updateUser = async () => {
     try {
-      await axios.put(`http://localhost:8087/user/register/${editingUser.id}`, userData);
+      await axios.put(`${url}/user/register/${editingUser.id}`, userData);
       setStudents((prev) =>
         prev.map((user) => (user.id === editingUser.id ? { ...user, ...userData } : user))
       );
@@ -197,7 +199,7 @@ const LoggedInfo = () => {
   const deleteMessage = async (id) => {
     if (!window.confirm('Are you sure you want to delete this message?')) return;
     try {
-      await axios.delete(`http://localhost:8087/user/contactus/${id}`,);
+      await axios.delete(`${url}/user/contactus/${id}`,);
       setMessages((prev) => prev.filter((msg) => msg.id !== id));
       toast.success('Message deleted successfully');
     } catch {

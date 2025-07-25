@@ -16,16 +16,19 @@ import {
 import { motion } from 'framer-motion';
 import { FaMale, FaFemale, FaUtensils, FaIceCream } from 'react-icons/fa';
 import { FaBowlRice } from 'react-icons/fa6'; // ✅ Updated icon
+import { useAppContext } from '../AppContext/AppContext';
+import { FiLoader } from 'react-icons/fi';
 
 const Reports = () => {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('daily');
+  const { url } = useAppContext(); // ✅ Use context to get the URL
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axios.get('http://localhost:8087/user/all');
+        const res = await axios.get(`${url}/user/all`);
         const filteredStudents = res.data.filter(user => user.role !== 'admin' && user.roomId);
         setStudents(filteredStudents);
       } catch (err) {
@@ -98,8 +101,30 @@ const Reports = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20 min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="flex flex-col items-center space-y-4">
+          {/* Animated spinner with gradient */}
+          {/* <div className="relative h-12 w-12">
+          <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-t-indigo-500 border-r-indigo-500 animate-spin"></div>
+        </div> */}
+          <FiLoader className='w-10 h-10 animate-spin text-indigo-600' />
+
+          {/* Loading text with animated dots */}
+          <div className="flex flex-col items-center space-y-2">
+            <h3 className="text-xl font-semibold text-gray-700">Loading Hostel Plans...</h3>
+            <p className="text-gray-500">Please wait while we fetch the best options for you</p>          <div className="flex space-x-1">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-2 w-2 bg-indigo-400 rounded-full animate-bounce"
+                  style={{ animationDelay: `${i * 0.2}s` }}
+                />
+              ))}
+            </div>
+          </div>
+
+        </div>
       </div>
     );
   }
