@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
+import { useAppContext } from '../AppContext/AppContext';
 
 // Loading Spinner
 const LoadingSpinner = () => (
@@ -120,6 +121,7 @@ const OrderDetails = () => {
     const [loading, setLoading] = useState(true);
     const [email, setEmail] = useState('');
     const [error, setError] = useState(null);
+    const { url } = useAppContext();
 
     useEffect(() => {
         const fetchUserAndOrders = async () => {
@@ -148,7 +150,7 @@ const OrderDetails = () => {
     const fetchOrders = async (email) => {
         try {
             setLoading(true);
-            const { data } = await axios.get(`http://localhost:8087/user/save-order/${email}`);
+            const { data } = await axios.get(`${url}/user/save-order/${email}`);
             setOrderData(data.orders || []);
             setError(null);
         } catch (error) {

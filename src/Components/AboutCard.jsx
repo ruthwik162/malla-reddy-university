@@ -16,6 +16,8 @@ import {
   FaChevronLeft,
   FaChevronRight
 } from 'react-icons/fa';
+import { useAppContext } from '../AppContext/AppContext';
+import { FiLoader } from 'react-icons/fi';
 
 const AboutCard = () => {
   const [features, setFeatures] = useState([]);
@@ -23,11 +25,12 @@ const AboutCard = () => {
   const [activeFeature, setActiveFeature] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
   const featuresPerPage = 5;
+  const {url} = useAppContext();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("http://localhost:8087/user/about");
+        const response = await fetch(`${url}/user/about`);
         if (!response.ok) throw new Error("Failed to fetch data");
         const data = await response.json();
         setFeatures(data);
@@ -71,17 +74,35 @@ const AboutCard = () => {
 
   const totalPages = Math.ceil(combinedFeatures.length / featuresPerPage);
 
-  if (loading) {
-    return (
-      <div className="min-h-[400px] flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-          className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full"
-        ></motion.div>
-      </div>
-    );
-  }
+   if (loading) {
+     return (
+       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+         <div className="flex flex-col items-center space-y-4">
+           {/* Animated spinner with gradient */}
+           {/* <div className="relative h-12 w-12">
+           <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+           <div className="absolute inset-0 rounded-full border-4 border-t-indigo-500 border-r-indigo-500 animate-spin"></div>
+         </div> */}
+           <FiLoader className='w-10 h-10 animate-spin text-indigo-600' />
+ 
+           {/* Loading text with animated dots */}
+           <div className="flex flex-col items-center space-y-2">
+             <h3 className="text-xl font-semibold text-gray-700">Loading Hostel Feattures...</h3>
+             <p className="text-gray-500">Please wait while we fetch the best features for you</p>          <div className="flex space-x-1">
+               {[...Array(4)].map((_, i) => (
+                 <div
+                   key={i}
+                   className="h-2 w-2 bg-indigo-400 rounded-full animate-bounce"
+                   style={{ animationDelay: `${i * 0.2}s` }}
+                 />
+               ))}
+             </div>
+           </div>
+ 
+         </div>
+       </div>
+     );
+   }
 
   return (
     <section className="pt-10 md:px-10 px-2 bg-white">

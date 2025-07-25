@@ -4,7 +4,7 @@ import { useAppContext } from "../AppContext/AppContext";
 import { motion } from "framer-motion";
 import { FaWifi, FaUtensils, FaBook, FaShieldAlt, FaTshirt, FaBed, FaStar, FaSearch } from "react-icons/fa";
 import { IoIosArrowForward } from "react-icons/io";
-import { useParams } from "react-router-dom";
+import { FiLoader } from "react-icons/fi";
 
 const PricingPlans = () => {
   const [plans, setPlans] = useState([]);
@@ -12,10 +12,12 @@ const PricingPlans = () => {
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const { navigate, user } = useAppContext();
+  const { url } = useAppContext();
+
 
   const fetchPlans = async () => {
     try {
-      const response = await axios.get(`http://localhost:8087/user/plans`);
+      const response = await axios.get(`${url}/user/plans`);
       setPlans(response.data);
     } catch (error) {
       console.error("Error fetching plans:", error);
@@ -32,7 +34,7 @@ const PricingPlans = () => {
     if (activeFilter !== "all" && plan.category !== activeFilter) {
       return false;
     }
-    
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return (
@@ -41,7 +43,7 @@ const PricingPlans = () => {
         plan.features.toLowerCase().includes(query)
       );
     }
-    
+
     return true;
   });
 
@@ -60,25 +62,36 @@ const PricingPlans = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center"
-        >
-          <div className="flex justify-center mb-4">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-              className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full"
-            ></motion.div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="flex flex-col items-center space-y-4">
+          {/* Animated spinner with gradient */}
+          {/* <div className="relative h-12 w-12">
+          <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-t-indigo-500 border-r-indigo-500 animate-spin"></div>
+        </div> */}
+          <FiLoader className='w-10 h-10 animate-spin text-indigo-600' />
+
+          {/* Loading text with animated dots */}
+          <div className="flex flex-col items-center space-y-2">
+            <h3 className="text-xl font-semibold text-gray-700">Loading Hostel Plans...</h3>
+            <p className="text-gray-500">Please wait while we fetch the best options for you</p>          <div className="flex space-x-1">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-2 w-2 bg-indigo-400 rounded-full animate-bounce"
+                  style={{ animationDelay: `${i * 0.2}s` }}
+                />
+              ))}
+            </div>
           </div>
-          <h3 className="text-xl font-semibold text-gray-700">Loading Hostel Plans...</h3>
-          <p className="text-gray-500">Please wait while we fetch the best options for you</p>
-        </motion.div>
+
+        </div>
       </div>
     );
   }
+
+
+
 
   return (
     <section className="relative min-h-screen py-30  overflow-hidden">
@@ -121,11 +134,10 @@ const PricingPlans = () => {
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
-                className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
-                  activeFilter === filter
+                className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${activeFilter === filter
                     ? "bg-indigo-600 text-white"
                     : "text-gray-600 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 {filter.charAt(0).toUpperCase() + filter.slice(1)}
               </button>
@@ -156,14 +168,12 @@ const PricingPlans = () => {
                 )}
 
                 <div
-                  className={`h-full bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 ${
-                    plan.name.toLowerCase() === "standard plan" ? "border-2 border-yellow-400" : "border border-gray-200"
-                  }`}
+                  className={`h-full bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 ${plan.name.toLowerCase() === "standard plan" ? "border-2 border-yellow-400" : "border border-gray-200"
+                    }`}
                 >
                   <div
-                    className={`p-6 ${
-                      plan.name.toLowerCase() === "standard plan" ? "bg-gradient-to-r from-indigo-50 to-blue-50" : "bg-white"
-                    }`}
+                    className={`p-6 ${plan.name.toLowerCase() === "standard plan" ? "bg-gradient-to-r from-indigo-50 to-blue-50" : "bg-white"
+                      }`}
                   >
                     <div className="flex items-center mb-4">
                       {getPlanIcon(plan.name)}
@@ -204,14 +214,13 @@ const PricingPlans = () => {
 
                   <div className="px-6 pb-6">
                     <motion.button
-                      onClick={() => {navigate(`/plan/${plan._id}`);scrollTo(0,0)}}
+                      onClick={() => { navigate(`/plan/${plan._id}`); scrollTo(0, 0) }}
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.98 }}
-                      className={`w-full py-3 px-6 rounded-lg font-medium flex items-center justify-center ${
-                        plan.name.toLowerCase() === "standard plan"
+                      className={`w-full py-3 px-6 rounded-lg font-medium flex items-center justify-center ${plan.name.toLowerCase() === "standard plan"
                           ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-lg"
                           : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                      }`}
+                        }`}
                     >
                       {user ? "Book Now" : "View Details"}
                       <IoIosArrowForward className="ml-2" />

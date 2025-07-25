@@ -10,6 +10,9 @@ export const AppContextProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [showUserLogin, setShowUserLogin] = useState(false);
 
+  // 🔁 Replace this with your actual backend URL
+  const url = "https://hostel-backend-bsza.onrender.com";
+
   // Load user on mount from sessionStorage or localStorage
   useEffect(() => {
     const storedUser = sessionStorage.getItem("user") || localStorage.getItem("user");
@@ -21,7 +24,7 @@ export const AppContextProvider = ({ children }) => {
   // Register User
   const register = async (formData) => {
     try {
-      await axios.post("http://localhost:8087/user/register", formData, {
+      await axios.post(`${url}/user/register`, formData, {
         headers: { "Content-Type": "application/json" },
       });
       toast.success("Registration successful! Please log in.");
@@ -34,48 +37,46 @@ export const AppContextProvider = ({ children }) => {
   };
 
   // Login User
-const login = async (email, password) => {
-  try {
-    const response = await axios.post("http://localhost:8087/user/login", {
-      email,
-      password,
-    }, {
-      headers: { "Content-Type": "application/json" },
-      withCredentials: true,
-    });
+  const login = async (email, password) => {
+    try {
+      const response = await axios.post(`${url}/user/login`, {
+        email,
+        password,
+      }, {
+        headers: { "Content-Type": "application/json" },
+        withCredentials: true,
+      });
 
-    console.log("Login response:", response.data); // helpful for debugging
+      console.log("Login response:", response.data); // helpful for debugging
 
-    // ✅ Fix: fallback to raw response if `user` is not wrapped
-    const user = response.data.user || response.data;
+      const user = response.data.user || response.data;
 
-    if (!user || !user._id) {
-      toast.error("Login failed: Invalid user data");
-      return;
+      if (!user || !user._id) {
+        toast.error("Login failed: Invalid user data");
+        return;
+      }
+
+      const userDetails = {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        mobile: user.mobile,
+        role: user.role,
+        gender: user.gender,
+      };
+
+      localStorage.setItem("user", JSON.stringify(userDetails));
+      sessionStorage.setItem("user", JSON.stringify(userDetails));
+      setUser(userDetails);
+
+      toast.success("Logged in successfully!");
+      navigate(user.role === "admin" ? "/adminhome" : "/");
+      setShowUserLogin(false);
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error(error.response?.data?.message || "Login failed.");
     }
-
-    const userDetails = {
-      id: user._id,
-      username: user.username,
-      email: user.email,
-      mobile: user.mobile,
-      role: user.role,
-      gender: user.gender,
-    };
-
-    localStorage.setItem("user", JSON.stringify(userDetails));
-    sessionStorage.setItem("user", JSON.stringify(userDetails));
-    setUser(userDetails);
-
-    toast.success("Logged in successfully!");
-    navigate(user.role === "admin" ? "/adminhome" : "/");
-    setShowUserLogin(false);
-  } catch (error) {
-    console.error("Login error:", error);
-    toast.error(error.response?.data?.message || "Login failed.");
-  }
-};
-
+  };
 
   // Logout User
   const logout = () => {
@@ -97,6 +98,7 @@ const login = async (email, password) => {
         login,
         logout,
         navigate,
+        url
       }}
     >
       {children}

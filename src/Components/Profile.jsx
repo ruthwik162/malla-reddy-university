@@ -8,6 +8,7 @@ import {
   FiEye, FiEyeOff, FiX, FiCheck, FiCamera
 } from 'react-icons/fi';
 import { debounce } from 'lodash';
+import { useAppContext } from '../AppContext/AppContext';
 
 const Profile = () => {
   const [user, setUser] = useState({
@@ -25,6 +26,7 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isImageUploading, setIsImageUploading] = useState(false);
+  const {url} = useAppContext();
 
 
   const [userData, setUserData] = useState({
@@ -56,7 +58,7 @@ const Profile = () => {
     
 
     try {
-      const { data } = await axios.get(`http://localhost:8087/user/${parsedUser.id}`, {
+      const { data } = await axios.get(`${url}/user/${parsedUser.id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       setUser(data);
@@ -71,7 +73,7 @@ const Profile = () => {
   const checkUsernameAvailability = debounce(async (username) => {
     if (!username || username === user.username) return;
     try {
-      const { data } = await axios.get(`http://localhost:8087/user/check-username?username=${username}`);
+      const { data } = await axios.get(`${url}/user/check-username?username=${username}`);
       if (!data.available) toast.error('Username already taken!');
     } catch (err) {
       console.error("Username check failed:", err);
@@ -83,7 +85,7 @@ const Profile = () => {
     setIsLoading(true);
     try {
       const { data } = await axios.put(
-        `http://localhost:8087/user/register/${user.id}`,
+        `${url}/user/register/${user.id}`,
         userData,
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -120,7 +122,7 @@ const Profile = () => {
       formData.append('image', file);
 
       const { data } = await axios.post(
-        `http://localhost:8087/user/${user.id}/upload-image`,
+        `${url}/user/${user.id}/upload-image`,
         formData,
         {
           headers: {

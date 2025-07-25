@@ -3,6 +3,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { FaSpinner, FaMapMarkerAlt, FaPhone, FaEnvelope, FaUserTie } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { useAppContext } from '../AppContext/AppContext';
 
 const ContactUs = () => {
   const [formData, setFormData] = useState({
@@ -14,6 +15,7 @@ const ContactUs = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const {url} = useAppContext();
 
   const validateForm = () => {
     const newErrors = {};
@@ -55,7 +57,7 @@ const ContactUs = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:8087/user/contactus', contactData, {
+      const response = await axios.post(`${url}/user/contactus`, contactData, {
         headers: {
           'Content-Type': 'application/json',
         },

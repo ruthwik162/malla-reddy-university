@@ -3,6 +3,7 @@ import { useAppContext } from "../AppContext/AppContext";
 import { assets } from "../assets/assets";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import PropTypes from "prop-types";
+import { FiCreditCard, FiEdit, FiLogOut, FiUser } from "react-icons/fi";
 
 const Navbar = () => {
     const navLinks = [
@@ -16,6 +17,7 @@ const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const location = useLocation();
+    const { url } = useAppContext();
 
     const { user, setUser, navigate, logout, setShowUserLogin } = useAppContext();
 
@@ -24,7 +26,7 @@ const Navbar = () => {
         const username = localStorage.getItem("username");
         if (!user && username) {
             try {
-                const res = await fetch("http://localhost:8087/user/all");
+                const res = await fetch(`${url}/user/all`);
                 if (!res.ok) throw new Error("Failed to fetch users");
                 const data = await res.json();
                 const currentUser = data.find(u => u.username === username);
@@ -124,7 +126,7 @@ const Navbar = () => {
                     </NavLink>
                 ))}
 
-                {user ? (<Link to='/orderdetails'>Order Details</Link>) : (null)}
+                {user?.role === "user" ? <Link to='/orderdetails'>Order Details</Link> : null}
             </div>
 
             {/* Desktop Right */}
@@ -132,10 +134,11 @@ const Navbar = () => {
                 {user?.role === "admin" && (
                     <button
                         onClick={() => navigate("/adminhome")}
-                        className="cursor-pointer px-6 py-1.5 bg-indigo-600 hover:bg-indigo-700 transition text-white rounded-full text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        className="cursor-pointer px-6 flex items-center justify-center gap-2 py-1.5 bg-indigo-600 hover:bg-indigo-700 transition text-white rounded-full text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                         aria-label="Admin dashboard"
                     >
-                        Admin
+                        <span>Admin</span>
+                        <FiUser/>
                     </button>
                 )}
 
@@ -173,31 +176,32 @@ const Navbar = () => {
                                         navigate("/profile");
                                         setIsProfileDropdownOpen(false);
                                     }}
-                                    className="p-2 pl-3 flex gap-2 hover:bg-indigo-50 cursor-pointer text-gray-700"
+                                    className="p-2 pl-3 flex gap-2 items-center justify-center hover:bg-indigo-50 cursor-pointer text-gray-700"
                                     role="menuitem"
                                 >
                                     <span>Edit</span>
-                                    <img className="w-4 h-4" src={assets.edit} alt="" aria-hidden="true" />
+                                    <FiEdit/>
                                 </li>
                                 <li
                                     onClick={() => {
                                         navigate("/orderdetails");
                                     }}
-                                    className="p-2 pl-3 flex gap-2 hover:bg-indigo-50 cursor-pointer text-gray-700"
+                                    className="p-2 pl-3 flex gap-2 items-center justify-center hover:bg-indigo-50 cursor-pointer text-gray-700"
                                     role="menuitem"
                                 >
                                     <span>Orders</span>
-                                    <img className="w-4 h-4" src={assets.edit} alt="" aria-hidden="true" />
+                                    <FiCreditCard/>
                                 </li>
                                 <li
                                     onClick={() => {
                                         logout();
                                         setIsProfileDropdownOpen(false);
                                     }}
-                                    className="p-2 pl-3 hover:bg-indigo-50 cursor-pointer text-gray-700"
+                                    className="p-2 pl-3 hover:bg-indigo-50 gap-2 flex items-center justify-center cursor-pointer text-gray-700"
                                     role="menuitem"
                                 >
-                                    Logout
+                                    <span>Logout</span>
+                                    <FiLogOut/>
                                 </li>
                             </ul>
                         )}
