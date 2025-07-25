@@ -2,9 +2,9 @@ import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import { FiCheck, FiStar, FiArrowLeft, FiDownload, FiClock, FiUsers, FiWifi, FiCoffee, FiLoader } from 'react-icons/fi';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { FiCheck, FiStar, FiArrowLeft, FiDownload, FiLoader } from 'react-icons/fi';
 import { FaWifi, FaUtensils, FaBook, FaShieldAlt, FaTshirt, FaBed, FaStar } from 'react-icons/fa';
 import { useAppContext } from '../AppContext/AppContext';
 
@@ -26,16 +26,13 @@ const PlanDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [generatingInvoice, setGeneratingInvoice] = useState(false);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [orderData, setOrderData] = useState(null);
+  const [alreadyBooked, setAlreadyBooked] = useState(false);
+  const [existingBooking, setExistingBooking] = useState(null);
   const { id } = useParams();
   const navigate = useNavigate();
-  const {url} = useAppContext();
-
-  useEffect(() => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-  }, []);
+  const { url } = useAppContext();
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -63,198 +60,335 @@ const PlanDetails = () => {
       }
     };
     fetchPlans();
-  }, [id]);
+  }, [id, url]);
 
-  const handlePayment = () => {
-    const options = {
-      key: "rzp_live_0CAWJFt3q8oaUX",
-      amount: room.priceMonthly * 100,
-      currency: "INR",
-      name: "ExcelR",
-      description: "Plan Payment",
-      handler: async function (response) {
-        const payload = {
-          name: room.name,
-          planId: id,
-          paymentId: response.razorpay_payment_id,
-          amount: room.priceMonthly,
-          user: {
-            name: "John Doe",
-            email: "john@example.com",
-            mobile: "9876543210"
-          }
-        };
-
+  useEffect(() => {
+    const checkExistingBooking = async () => {
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      if (storedUser?.email) {
         try {
-          await axios.post(`${url}/user/save-order`, payload);
-          generateInvoice(response.razorpay_payment_id, payload);
-          navigate("/dashboard");
+          const response = await axios.get(`${url}/user/save-order/${storedUser.email}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+          if (response.data) {
+            setExistingBooking(response.data);
+            setAlreadyBooked(true);
+          }
         } catch (error) {
-          console.error("Order saving failed:", error);
+          console.log("No existing booking found");
         }
-      },
-      prefill: {
-        name: "John Doe",
-        email: "john@example.com",
-        contact: "9876543210",
-      },
-      theme: { color: "#4f46e5" },
+      }
     };
 
-    const rzp = new window.Razorpay(options);
-    rzp.open();
-  };
+    checkExistingBooking();
+  }, [url]);
 
-  const generateInvoice = (paymentId, data) => {
-    setGeneratingInvoice(true);
+  const handlePayment = async () => {
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+
+    if (!storedUser?.email) {
+      alert("Please login to complete your booking");
+      navigate('/login');
+      return;
+    }
 
     try {
-      const doc = new jsPDF();
+      const mockPaymentId = `PAY${Date.now().toString().slice(-8)}MRU`;
 
-      // Set default font
-      doc.setFont('helvetica', 'normal');
+      const payload = {
+        name: storedUser.username || "MRU Student",
+        email: storedUser.email,
+        mobile: storedUser.mobile || "Not Provided",
+        address: "Malla Reddy University Campus",
+        gender: storedUser.gender || "other",
+        planId: id,
+        paymentId: mockPaymentId,
+        totalAmount: room.priceMonthly || room.price_yearly / 12
+      };
 
-      // Add header with logo and decorative elements
-      doc.setFillColor(79, 70, 229);
-      doc.rect(0, 0, 220, 40, 'F');
+      console.log("Submitting booking with payload:", payload);
 
-      // Add logo text
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(24);
-      doc.setFont('helvetica', 'bold');
-      doc.text("ExcelR", 15, 25);
-
-      // Add decorative line under header
-      doc.setDrawColor(255, 255, 255);
-      doc.setLineWidth(0.5);
-      doc.line(15, 35, 195, 35);
-
-      // Invoice title section
-      doc.setTextColor(0, 0, 0);
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text("INVOICE", 105, 55, { align: 'center' });
-
-      // Invoice details
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Invoice #: INV-${paymentId.slice(0, 8).toUpperCase()}`, 15, 50);
-      doc.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, 15, 55);
-
-      // Add decorative border
-      doc.setDrawColor(200, 200, 200);
-      doc.setLineWidth(0.2);
-      doc.roundedRect(10, 60, 190, 140, 3, 3);
-
-      // Customer details section
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.text("BILLED TO:", 20, 70);
-      doc.setFont('helvetica', 'normal');
-      doc.text(data.user.name, 20, 77);
-      doc.text(data.user.email, 20, 84);
-      doc.text(data.user.mobile, 20, 91);
-
-      // Plan details section
-      doc.setFont('helvetica', 'bold');
-      doc.text("PLAN DETAILS:", 20, 105);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Plan: ${data.name}`, 20, 112);
-      doc.text(`Subscription: Monthly`, 20, 119);
-
-      // Payment details section
-      doc.setFont('helvetica', 'bold');
-      doc.text("PAYMENT DETAILS:", 120, 70);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Payment ID: ${paymentId}`, 120, 77);
-      doc.text(`Payment Method: Razorpay`, 120, 84);
-      doc.text(`Status: Paid`, 120, 91);
-
-      // Items table
-      const headers = [["Description", "Amount"]];
-      const invoiceData = [
-        [`${data.name} Plan (Monthly)`, `₹${data.amount}`],
-        ["Taxes (included)", "₹0"],
-        ["Discount", "-₹0"],
-        ["Total", `₹${data.amount}`]
-      ];
-
-      doc.autoTable({
-        startY: 130,
-        head: headers,
-        body: invoiceData,
-        theme: 'grid',
-        headStyles: {
-          fillColor: [79, 70, 229],
-          textColor: 255,
-          fontStyle: 'bold'
+      const response = await axios.post(`${url}/user/save-order`, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        styles: {
-          cellPadding: 5,
-          fontSize: 10,
-          valign: 'middle'
-        },
-        columnStyles: {
-          0: { cellWidth: 'auto', fontStyle: 'bold' },
-          1: { cellWidth: 'auto', halign: 'right' }
-        },
-        didDrawPage: function (data) {
-          // Footer
-          doc.setFontSize(10);
-          doc.setTextColor(100, 100, 100);
-          doc.text("Thank you for your purchase!", 105, 280, { align: 'center' });
-          doc.text("For any queries, contact support@excelr.com", 105, 285, { align: 'center' });
-
-          // Company info footer
-          doc.setFontSize(8);
-          doc.text("ExcelR Hostels, 123 Education Street, Bangalore, Karnataka 560001", 105, 290, { align: 'center' });
-          doc.text("GSTIN: 22AAAAA0000A1Z5 | CIN: U80302KA2022PTC123456", 105, 295, { align: 'center' });
-        }
+        timeout: 10000
       });
 
-      // Add watermark
-      doc.setFontSize(60);
-      doc.setTextColor(230, 230, 230);
-      doc.setFont('helvetica', 'bold');
-      doc.text("PAID", 60, 150, { angle: 45 });
+      if (response.data.message?.includes("Succesfully Booked")) {
+        const bookingData = {
+          ...response.data,
+          user: {
+            name: storedUser.username,
+            email: storedUser.email,
+            mobile: storedUser.mobile,
+            gender: storedUser.gender
+          },
+          amount: payload.totalAmount
+        };
 
-      doc.save(`Invoice_${paymentId.slice(0, 8)}.pdf`);
+        setOrderData(bookingData);
+        setBookingSuccess(true);
+        setAlreadyBooked(true);
+
+        alert(`🎉 Booking Confirmed!\n\nRoom: ${response.data.roomNumber}\nBlock: ${response.data.blockName}\nAmount: ₹${payload.totalAmount}`);
+      } else {
+        throw new Error(response.data.message || "Unexpected response from server");
+      }
     } catch (error) {
-      console.error("Error generating invoice:", error);
-    } finally {
-      setGeneratingInvoice(false);
+      console.error("Booking error details:", {
+        error: error.response?.data || error.message,
+        config: error.config
+      });
+
+      let errorMessage = "Booking failed. Please try again.";
+
+      if (error.response) {
+        if (error.response.status === 400) {
+          errorMessage = "Validation error: " +
+            (error.response.data.errors?.map(e => e.msg).join(", ") ||
+              error.response.data.message);
+        } else if (error.response.status === 500) {
+          errorMessage = "Server error. Please contact support if this persists.";
+        }
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage = "Request timed out. Check your internet connection.";
+      }
+
+      alert(errorMessage);
     }
   };
 
-if (loading) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="flex flex-col items-center space-y-4">
-        {/* Animated spinner with gradient */}
-        {/* <div className="relative h-12 w-12">
-          <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
-          <div className="absolute inset-0 rounded-full border-4 border-t-indigo-500 border-r-indigo-500 animate-spin"></div>
-        </div> */}
-        <FiLoader className='w-10 h-10 animate-spin text-indigo-600'/>
-        
-        {/* Loading text with animated dots */}
-        <div className="flex flex-col items-center space-y-2">
-          <p className="text-lg font-medium text-gray-700">Loading plan details</p>
-          <div className="flex space-x-1">
-            {[...Array(4)].map((_, i) => (
-              <div 
-                key={i}
-                className="h-2 w-2 bg-indigo-400 rounded-full animate-bounce"
-                style={{ animationDelay: `${i * 0.2}s` }}
-              />
-            ))}
+const downloadInvoice = async () => {
+  setGeneratingInvoice(true);
+
+  try {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || !user.email) {
+      alert("User not found in local storage.");
+      return;
+    }
+
+    const email = user.email;
+    const response = await axios.get(`${url}/user/save-order/${email}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+
+    const orders = response.data.orders;
+    if (!orders || orders.length === 0) {
+      alert("No booking found for this user.");
+      return;
+    }
+
+    const bookingData = orders[0];
+    if (!bookingData.paymentId || !bookingData.createdAt) {
+      alert("Incomplete booking data. Cannot generate invoice.");
+      return;
+    }
+
+    const doc = new jsPDF();
+
+    // Header
+    doc.setFillColor(79, 70, 229);
+    doc.rect(0, 0, 220, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(22);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Malla Reddy University", 15, 25);
+
+    // Invoice Title
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text("BOOKING INVOICE", 105, 50, { align: 'center' });
+
+    // Invoice Meta Info
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Invoice #: INV-${bookingData.paymentId.slice(0, 8)}`, 15, 60);
+    doc.text(`Date: ${new Date(bookingData.createdAt).toLocaleDateString('en-IN')}`, 15, 65);
+    if (bookingData.room?.number) {
+      doc.text(`Room: ${bookingData.room.number}`, 15, 70);
+    }
+
+    // Student Info
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(33, 33, 33);
+    doc.text("STUDENT DETAILS", 20, 85);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    doc.text(`Name: ${bookingData.name}`, 20, 92);
+    doc.text(`Email: ${bookingData.email}`, 20, 99);
+    doc.text(`Mobile: ${bookingData.mobile}`, 20, 106);
+    doc.text(`Gender: ${bookingData.gender}`, 20, 113);
+
+    // Booking Info
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(33, 33, 33);
+    doc.text("BOOKING DETAILS", 120, 85);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(60, 60, 60);
+    if (bookingData.block?.name) doc.text(`Block: ${bookingData.block.name}`, 120, 92);
+    if (bookingData.room?.number) doc.text(`Room: ${bookingData.room.number}`, 120, 99);
+    doc.text(`Plan ID: ${bookingData.planId}`, 120, 106);
+
+    // Payment Table
+    const amount = bookingData.totalAmount?.toFixed(2) || '0.00';
+
+    autoTable(doc, {
+      startY: 125,
+      head: [["Description", "Amount"]],
+      body: [
+        [`Hostel Booking (${bookingData.planId})`, `₹${amount}`],
+        ["Total Amount", `₹${amount}`]
+      ],
+      theme: 'grid',
+      headStyles: {
+        fillColor: [79, 70, 229],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      columnStyles: {
+        0: { cellWidth: 'auto', fontStyle: 'bold' },
+        1: { cellWidth: 'auto', halign: 'right' }
+      },
+      margin: { top: 125 }
+    });
+
+    const finalY = doc.lastAutoTable?.finalY || 150;
+
+    // Footer Note
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'italic');
+    doc.setTextColor(100, 100, 100);
+    doc.text("Thank you for your booking!", 105, finalY + 20, { align: 'center' });
+    doc.text("For queries: hostel@mallareddyuniversity.ac.in", 105, finalY + 26, { align: 'center' });
+
+    // Watermark
+    doc.setFont("courier", "bold");
+    doc.setFontSize(60);
+    doc.setTextColor(230, 230, 230);
+    doc.text("PAID", 60, 160, { angle: 45 });
+
+    // Save File
+    const fileName = `MRU_Booking_${bookingData.paymentId.slice(0, 8)}.pdf`;
+    doc.save(fileName);
+
+  } catch (error) {
+    console.error("Error generating invoice:", error);
+    alert(`Failed to generate invoice: ${error.message}`);
+  } finally {
+    setGeneratingInvoice(false);
+  }
+};
+
+
+  const renderActionButtons = () => {
+    if (alreadyBooked) {
+      return (
+        <>
+          <button
+            onClick={() => {navigate('/');scrollTo(0, 0)}}
+            className="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md"
+          >
+            View Dashboard
+          </button>
+          <button
+            onClick={downloadInvoice}
+            disabled={generatingInvoice}
+            className="flex items-center justify-center gap-2 flex-1 border border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-medium py-3 px-6 rounded-lg transition"
+          >
+            {generatingInvoice ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Generating...
+              </>
+            ) : (
+              <>
+                <FiDownload /> Download Invoice
+              </>
+            )}
+          </button>
+        </>
+      );
+    }
+
+    if (bookingSuccess) {
+      return (
+        <>
+          <button
+            onClick={() => navigate('/')}
+            className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+          >
+            Go to Dashboard
+          </button>
+          <button
+            onClick={downloadInvoice}
+            disabled={generatingInvoice}
+            className="flex items-center justify-center gap-2 flex-1 border border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-medium py-3 px-6 rounded-lg transition"
+          >
+            {generatingInvoice ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Generating...
+              </>
+            ) : (
+              <>
+                <FiDownload /> Download Invoice
+              </>
+            )}
+          </button>
+        </>
+      );
+    }
+
+    return (
+      <button
+        onClick={handlePayment}
+        className="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+      >
+        Book Now
+      </button>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="flex flex-col items-center space-y-4">
+          <FiLoader className='w-10 h-10 animate-spin text-indigo-600' />
+          <div className="flex flex-col items-center space-y-2">
+            <p className="text-lg font-medium text-gray-700">Loading plan details</p>
+            <div className="flex space-x-1">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-2 w-2 bg-indigo-400 rounded-full animate-bounce"
+                  style={{ animationDelay: `${i * 0.2}s` }}
+                />
+              ))}
+            </div>
           </div>
         </div>
-
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   if (error) {
     return (
@@ -277,8 +411,7 @@ if (loading) {
   return (
     <AnimatePresence>
       <section className="relative min-h-screen py-20 bg-gray-50 overflow-hidden">
-        {/* Decorative elements */}
-      <div className="absolute top-0 left-0 w-full h-120 rounded-b-xl bg-gradient-to-br from-indigo-600/90 via-indigo-700/80 to-indigo-800/70"></div>
+        <div className="absolute top-0 left-0 w-full h-120 rounded-b-xl bg-gradient-to-br from-indigo-600/90 via-indigo-700/80 to-indigo-800/70"></div>
 
         <div className="relative max-w-7xl max-h-5xl z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <motion.div
@@ -287,26 +420,25 @@ if (loading) {
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            
-
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">{room.name} Plan Details</h2>
             <p className="text-lg text-indigo-100 max-w-2xl mx-auto">
               Everything you need to know about our {room.name.toLowerCase()} accommodation
             </p>
           </motion.div>
+
           <button
-              onClick={() => navigate(-1)}
-              className="flex items-center text-white cursor-pointer border-2 p-3 rounded-2xl hover:text-indigo-200 mb-8 transition"
-            >
-              <FiArrowLeft className="mr-2" /> Back to Plans
-            </button>
+            onClick={() => navigate(-1)}
+            className="flex items-center text-white cursor-pointer border-2 p-3 rounded-2xl hover:text-indigo-200 mb-8 transition"
+          >
+            <FiArrowLeft className="mr-2" /> Back to Plans
+          </button>
+
           <motion.div
             initial="hidden"
             animate="visible"
             variants={fadeUp}
             className="bg-white rounded-2xl shadow-xl overflow-hidden"
           >
-            
             <div className="md:flex">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -341,7 +473,6 @@ if (loading) {
                     {room.description}
                   </motion.p>
 
-                  {/* Pricing card with decorative elements */}
                   <motion.div
                     variants={fadeUp}
                     className="bg-indigo-50 p-6 rounded-xl mb-8 relative overflow-hidden"
@@ -362,7 +493,6 @@ if (loading) {
                     <p className="relative z-10 text-xs text-gray-500">* Prices inclusive of all taxes</p>
                   </motion.div>
 
-                  {/* Features with icons */}
                   <motion.div
                     variants={fadeUp}
                     className="mb-8"
@@ -385,7 +515,6 @@ if (loading) {
                     </motion.ul>
                   </motion.div>
 
-                  {/* Amenities section with decorative icons */}
                   <motion.div
                     variants={fadeUp}
                     className="mb-8 bg-gray-50 p-5 rounded-xl"
@@ -411,51 +540,17 @@ if (loading) {
                     </div>
                   </motion.div>
 
-                  {/* Action buttons */}
                   <motion.div
                     variants={fadeUp}
                     className="flex flex-col sm:flex-row gap-4"
                   >
-                    <button
-                      onClick={handlePayment}
-                      className="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
-                    >
-                      Book Now
-                    </button>
-                    <button
-                      onClick={() => generateInvoice("preview", {
-                        name: room.name,
-                        amount: room.priceMonthly,
-                        user: {
-                          name: "Sample User",
-                          email: "sample@example.com",
-                          mobile: "9876543210"
-                        }
-                      })}
-                      disabled={generatingInvoice}
-                      className="flex items-center justify-center gap-2 flex-1 border border-indigo-600 text-indigo-600 hover:bg-indigo-50 font-medium py-3 px-6 rounded-lg transition"
-                    >
-                      {generatingInvoice ? (
-                        <>
-                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <FiDownload /> Download Brochure
-                        </>
-                      )}
-                    </button>
+                    {renderActionButtons()}
                   </motion.div>
                 </motion.div>
               </div>
             </div>
           </motion.div>
 
-          {/* Testimonials section with decorative elements */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

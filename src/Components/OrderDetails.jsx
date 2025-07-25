@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { useAppContext } from '../AppContext/AppContext';
+import { FiLoader } from 'react-icons/fi';
 
 // Loading Spinner
 const LoadingSpinner = () => (
@@ -162,8 +163,35 @@ const OrderDetails = () => {
         }
     };
 
-    if (loading) return <LoadingSpinner />;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="flex flex-col items-center space-y-4">
+          {/* Animated spinner with gradient */}
+          {/* <div className="relative h-12 w-12">
+          <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-t-indigo-500 border-r-indigo-500 animate-spin"></div>
+        </div> */}
+          <FiLoader className='w-10 h-10 animate-spin text-indigo-600' />
 
+          {/* Loading text with animated dots */}
+          <div className="flex flex-col items-center space-y-2">
+            <h3 className="text-xl font-semibold text-gray-700">Loading Hostel Plans...</h3>
+            <p className="text-gray-500">Please wait while we fetch Order Details for you</p>          <div className="flex space-x-1">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-2 w-2 bg-indigo-400 rounded-full animate-bounce"
+                  style={{ animationDelay: `${i * 0.2}s` }}
+                />
+              ))}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
     if (error) {
         return (
             <ErrorMessage
@@ -194,7 +222,7 @@ const OrderDetails = () => {
             {/* Decorative banner with gradient */}
             <div className="absolute top-0 left-0 w-full h-120 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-b-2xl z-0"></div>
             
-            <div className="relative z-10 pt-10 md:pt-35 pb-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+            <div className="relative z-10 pt-30 md:pt-35 pb-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
                 <div className="text-center mb-12">
                     <h1 className="text-4xl font-bold text-white mb-2">Your Booking History</h1>
                     <p className="text-blue-100">View and manage all your hostel bookings</p>
