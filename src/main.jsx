@@ -6,7 +6,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { AppContextProvider } from './AppContext/AppContext.jsx'
 
 createRoot(document.getElementById('root')).render(
-  <BrowserRouter>
+  <BrowserRouter basename='/malla-reddy-university/'>
     <AppContextProvider>
       <App />
     </AppContextProvider>
