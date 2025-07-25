@@ -16,6 +16,7 @@ import AdminReports from './Admin/AdminReports'
 import Profile from './Components/Profile'
 import PlanDetails from './Components/PlanDetails'
 import BookingPage from './AdminPages/BookingPage'
+import OrderDetails from './Components/OrderDetails'
 
 const App = () => {
   const {showUserLogin} = useAppContext();
@@ -28,6 +29,8 @@ const App = () => {
       <Routes>
         <Route path='/' element={<Home/>} />
         <Route path='/about' element={<AboutUs/>}/>
+        <Route path='/orderdetails' element={<OrderDetails/>}/>
+        <Route path='/reports' element={<Reports/>}/>
         <Route path='/plan' element={<Plan/>}/>
         <Route path='/plan/:id' element={<PlanDetails/>}/>
         <Route path='/profile' element={<Profile/>}/>

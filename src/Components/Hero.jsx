@@ -41,9 +41,9 @@ const Hero = () => {
   };
 
   return (
-    <div className="relative flex md:px-10 flex-col items-center justify-center w-full min-h-screen pt-30 text-white bg-white bg-cover bg-center bg-no-repeat">
+    <div className="relative flex md:px-10  flex-col items-center justify-center w-full min-h-screen pt-30 md:pt-60 text-white bg-white bg-cover bg-center bg-no-repeat">
       {/* Enhanced gradient overlay */}
-      <div className="absolute top-0 left-0 w-full h-100 bg-gradient-to-br from-indigo-600/90 via-indigo-700/80 to-indigo-800/70"></div>
+      <div className="absolute top-0 left-0 w-full h-120 rounded-b-xl bg-gradient-to-br from-indigo-600/90 via-indigo-700/80 to-indigo-800/70"></div>
 
       <motion.div
         className="relative z-10 w-full max-w-9xl px-3 mx-auto"
@@ -66,7 +66,7 @@ const Hero = () => {
           <div className="md:w-1/2 md:pl-8">
             {/* Enhanced Badge */}
             <motion.div
-              className="flex items-center gap-2 w-full px-2  py-2 text-sm font-medium text-white transition-all justify-around duration-300 bg-indigo-800/70 rounded-full hover:bg-indigo-900/80 shadow-md"
+              className="flex hidden items-center gap-2 w-full px-2  py-2 text-sm font-medium text-white transition-all justify-around duration-300 bg-indigo-800/70 rounded-full hover:bg-indigo-900/80 shadow-md"
               variants={itemVariants}
             >
               <span className="text-indigo-100 md:text-lg text-[3vw]">New platform update available</span>
@@ -86,7 +86,7 @@ const Hero = () => {
 
             {/* Enhanced Title */}
             <motion.h1
-              className="mb-6 text-4xl w-full  font-bold leading-tight text-center sm:text-5xl md:text-5xl lg:text-4xl bg-gradient-to-r from-white to-indigo-100 bg-clip-text text-transparent"
+              className="mb-6 text-2xl w-full scale-130 md:scale-170   font-bold leading-tight text-center sm:text-5xl md:text-5xl lg:text-4xl bg-gradient-to-r from-white to-indigo-100 bg-clip-text text-transparent"
               variants={itemVariants}
             >
               Malla Reddy University <br className="hidden sm:block" /> Hostel
@@ -94,7 +94,7 @@ const Hero = () => {
 
             {/* Enhanced Description */}
             <motion.p
-              className="max-w-2xl mx-auto mb-8 text-sm text-center md:text-xl text-indigo-100"
+              className="max-w-2xl mx-auto mb-8 text-sm text-center md:text-md text-indigo-100"
               variants={itemVariants}
             >
               Premium accommodation with modern amenities, fostering a supportive environment for academic excellence and personal growth.
@@ -102,16 +102,17 @@ const Hero = () => {
 
             {/* Enhanced Buttons */}
             <motion.div
-              className="flex flex-col gap-4 sm:flex-row justify-center"
+              className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full"
               variants={itemVariants}
             >
+              {/* Primary Button */}
               <button
                 onClick={handleNavigation}
                 className="relative px-8 py-3 font-medium text-white transition-all duration-300 transform bg-indigo-600 rounded-lg hover:bg-indigo-700 hover:scale-105 active:scale-95 shadow-lg overflow-hidden group"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
               >
-                <span className="relative z-10 flex items-center">
+                <span className="relative z-10 flex justify-center items-center">
                   {user ? 'Book Now' : 'Join Now'}
                   {isHovered && (
                     <motion.span
@@ -126,35 +127,40 @@ const Hero = () => {
                 <span className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
               </button>
 
-              <button
-                onClick={() => navigate("/about")}
-                className="flex items-center justify-center gap-2 px-8 py-3 font-medium text-white transition-all duration-300 border-2 border-indigo-300 rounded-lg hover:bg-indigo-500/20 hover:scale-105 active:scale-95 hover:border-indigo-400 shadow-md"
-              >
-                Learn more
-                <motion.svg
-                  width="12"
-                  height="9"
-                  viewBox="0 0 12 9"
-                  className="mt-1"
-                  animate={{ x: [0, 4, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
+              {/* Learn More + Icon */}
+              <div className="relative flex justify-center gap-10 items-center">
+                <button
+                  onClick={() => navigate('/about')}
+                  className="flex items-center justify-center gap-2 px-8 py-3 font-medium text-white transition-all duration-300 border-2 border-indigo-300 rounded-lg hover:bg-indigo-500/20 hover:scale-105 active:scale-95 hover:border-indigo-400 shadow-md"
                 >
-                  <path
-                    d="M1 4.5h10.182m-4-3.5 4 3.5-4 3.5"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </motion.svg>
-              </button>
-              <div className="absolute -bottom-0 right-5 sm:bottom-8 sm:right-20 w-12 h-12 sm:w-24 sm:h-24 opacity-20">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
+                  Learn more
+                  <motion.svg
+                    width="12"
+                    height="9"
+                    viewBox="0 0 12 9"
+                    className="mt-1"
+                    animate={{ x: [0, 4, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                  >
+                    <path
+                      d="M1 4.5h10.182m-4-3.5 4 3.5-4 3.5"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </motion.svg>
+                </button>
+
+                {/* Decorative Icon */}
+                <div className="absolute -bottom-6 -right-20 sm:-bottom-42 sm:right-0 w-20 h-20 sm:w-38 sm:h-38 opacity-20 pointer-events-none">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                </div>
               </div>
             </motion.div>
           </div>

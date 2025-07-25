@@ -246,7 +246,7 @@ const AboutCard = () => {
               </Link>
               <Link to="/contactus">
                 <motion.button
-                  className="px-8 py-3 bg-transparent border-2 border-white text-white font-medium rounded-lg hover:bg-white hover:bg-opacity-10 transition-colors"
+                  className="px-8 py-3 bg-transparent border-2 border-white text-white font-medium rounded-lg hover:bg-green-200/30 hover:bg-opacity-10 transition-colors"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >

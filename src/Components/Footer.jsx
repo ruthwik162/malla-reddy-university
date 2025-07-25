@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from 'react-router-dom'
 import { assets } from '../assets/assets'
 import { FiHeart, FiMail, FiPhone } from 'react-icons/fi';
+import { FaLinkedin } from 'react-icons/fa';
 
 
 const Footer = () => {
@@ -19,7 +20,7 @@ const Footer = () => {
                                 alt="logo"
                             />
                             <p className="text-sm text-black text-center sm:text-left px-2 sm:px-0">
-                                This project is a modern student-teacher appointment booking system designed to simplify and digitize academic scheduling.
+                                We believe every student deserves a stress-free living experience that supports both academic success and personal growth. That’s why we provide not just rooms — but a complete ecosystem of modern amenities, responsive service, and a supportive community environment.
                             </p>
                         </div>
 
@@ -97,6 +98,17 @@ const Footer = () => {
                         <p>Made with</p>
                         <FiHeart className="text-green-500" />
                         <p>By Nagaruthwik</p>
+                    </div>
+                    <div className="flex items-center shadow-2xl gap-2 text-sm sm:text-[3.5vw] md:text-sm">
+                        <FaLinkedin className="text-blue-600" />
+                        <a
+                            href="https://www.linkedin.com/in/nagaruthwikmerugu/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:underline text-blue-300"
+                        >
+                            linkedin.com/in/nagaruthwikmerugu
+                        </a>
                     </div>
                 </div>
             </footer>

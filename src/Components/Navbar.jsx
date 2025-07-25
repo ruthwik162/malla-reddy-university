@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useAppContext } from "../AppContext/AppContext";
 import { assets } from "../assets/assets";
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import PropTypes from "prop-types";
 
 const Navbar = () => {
@@ -68,31 +68,30 @@ const Navbar = () => {
     };
 
     return (
-        <nav 
-            className={`fixed top-0 left-0 w-full flex items-center bg-cover justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${
-                isScrolled 
-                    ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4" 
-                    : "py-4 md:py-6"
-            }`}
+        <nav
+            className={`fixed top-0 left-0 w-full flex items-center bg-cover justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${isScrolled
+                ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4"
+                : "py-4 md:py-6"
+                }`}
             aria-label="Main navigation"
         >
             {/* Logo */}
-            <NavLink 
-                to="/" 
+            <NavLink
+                to="/"
                 className="hover:scale-110 transition-transform duration-200 p-2 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 aria-label="Home"
             >
-                <img 
-                    className="h-15 rounded w-22" 
-                    src={assets.mrulogo} 
-                    alt="MallaReddy University Logo" 
-                    width="88" 
+                <img
+                    className="h-15 rounded w-22"
+                    src={assets.mrulogo}
+                    alt="MallaReddy University Logo"
+                    width="88"
                     height="60"
                 />
             </NavLink>
 
-            <h1 
-                onClick={() => navigate("/")} 
+            <h1
+                onClick={() => navigate("/")}
                 className="hidden md:block cursor-pointer sm:text-2xl md:text-2xl md:gap-6 font-bold max-w-2xl text-white hover:text-indigo-100 transition-colors"
                 aria-label="MallaReddy University"
             >
@@ -102,31 +101,30 @@ const Navbar = () => {
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-4 lg:gap-8">
                 {navLinks.map((link, i) => (
-                    <NavLink 
-                        key={i} 
-                        to={link.path} 
-                        className={({ isActive }) => `group flex flex-col gap-0.5 ${
-                            isScrolled 
-                                ? isActive 
-                                    ? "text-indigo-600 font-semibold" 
-                                    : "text-gray-700 hover:text-indigo-600"
-                                : isActive
-                                    ? "text-white font-semibold"
-                                    : "text-black hover:text-indigo-200"
-                        } transition-colors duration-200`}
+                    <NavLink
+                        key={i}
+                        to={link.path}
+                        className={({ isActive }) => `group flex flex-col gap-0.5 ${isScrolled
+                            ? isActive
+                                ? "text-indigo-600 font-semibold"
+                                : "text-gray-700 hover:text-indigo-600"
+                            : isActive
+                                ? "text-white font-semibold"
+                                : "text-black hover:text-indigo-200"
+                            } transition-colors duration-200`}
                     >
                         {link.name}
-                        <div 
-                            className={`${
-                                isScrolled 
-                                    ? "bg-indigo-600" 
-                                    : "bg-white"
-                            } h-0.5 w-0 group-hover:w-full transition-all duration-300 ${
-                                location.pathname === link.path ? "w-full" : ""
-                            }`} 
+                        <div
+                            className={`${isScrolled
+                                ? "bg-indigo-600"
+                                : "bg-white"
+                                } h-0.5 w-0 group-hover:w-full transition-all duration-300 ${location.pathname === link.path ? "w-full" : ""
+                                }`}
                         />
                     </NavLink>
                 ))}
+
+                {user ? (<Link to='/orderdetails'>Order Details</Link>) : (null)}
             </div>
 
             {/* Desktop Right */}
@@ -166,26 +164,36 @@ const Navbar = () => {
                             />
                         </button>
                         {isProfileDropdownOpen && (
-                            <ul 
+                            <ul
                                 className="absolute top-12 right-0 bg-white shadow-lg border border-gray-200 py-2 w-40 rounded-md text-sm z-40"
                                 role="menu"
                             >
-                                <li 
+                                <li
                                     onClick={() => {
                                         navigate("/profile");
                                         setIsProfileDropdownOpen(false);
-                                    }} 
+                                    }}
                                     className="p-2 pl-3 flex gap-2 hover:bg-indigo-50 cursor-pointer text-gray-700"
                                     role="menuitem"
                                 >
                                     <span>Edit</span>
                                     <img className="w-4 h-4" src={assets.edit} alt="" aria-hidden="true" />
                                 </li>
-                                <li 
+                                <li
+                                    onClick={() => {
+                                        navigate("/orderdetails");
+                                    }}
+                                    className="p-2 pl-3 flex gap-2 hover:bg-indigo-50 cursor-pointer text-gray-700"
+                                    role="menuitem"
+                                >
+                                    <span>Orders</span>
+                                    <img className="w-4 h-4" src={assets.edit} alt="" aria-hidden="true" />
+                                </li>
+                                <li
                                     onClick={() => {
                                         logout();
                                         setIsProfileDropdownOpen(false);
-                                    }} 
+                                    }}
                                     className="p-2 pl-3 hover:bg-indigo-50 cursor-pointer text-gray-700"
                                     role="menuitem"
                                 >
@@ -199,16 +207,34 @@ const Navbar = () => {
 
             {/* Mobile Menu Button */}
             <div className="flex items-center gap-3 md:hidden">
+                {!user ? (
+                    <button
+                        onClick={() => setShowUserLogin(true)}
+                        className="cursor-pointer px-6 py-1.5  hover:bg-gray-100 transition text-Black rounded-xl text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        aria-label="Login"
+                    >
+                        Login
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => logout()}
+                        className="cursor-pointer px-6 py-1.5  hover:bg-gray-100 transition text-Black rounded-xl text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        aria-label="Login"
+                    >
+                        Logout
+                    </button>
+                )}
+
                 <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                     className="focus:outline-none"
                     aria-label="Toggle menu"
                     aria-expanded={isMenuOpen}
                 >
-                    <svg 
-                        className={`h-7 w-7 ${isScrolled ? "text-gray-800" : "text-white"}`} 
-                        fill="none" 
-                        viewBox="0 0 24 24" 
+                    <svg
+                        className={`h-7 w-7 ${isScrolled ? "text-gray-800" : "text-white"}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
                         stroke="currentColor"
                     >
                         {isMenuOpen ? (
@@ -221,14 +247,15 @@ const Navbar = () => {
             </div>
 
             {/* Mobile Menu */}
-            <div 
-                className={`fixed top-0 left-0 w-full h-screen bg-white text-base flex flex-col md:hidden items-center justify-center gap-6 font-medium text-gray-800 transition-all duration-300 ease-in-out transform ${
-                    isMenuOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
-                }`}
+            <div
+                className={`fixed top-0 left-0 w-full h-screen bg-white text-base flex flex-col md:hidden items-center justify-center gap-6 font-medium text-gray-800 transition-all duration-300 ease-in-out transform ${isMenuOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
+                    }`}
                 aria-hidden={!isMenuOpen}
             >
-                <button 
-                    className="absolute top-6 right-6 focus:outline-none" 
+
+
+                <button
+                    className="absolute top-6 right-6 focus:outline-none"
                     onClick={() => setIsMenuOpen(false)}
                     aria-label="Close menu"
                 >
@@ -237,40 +264,55 @@ const Navbar = () => {
                     </svg>
                 </button>
 
+                <NavLink to="/" className="hover:scale-110 transition-transform duration-200 p-2 rounded-2xl">
+                    <img className="h-15 rounded w-22" src={assets.mrulogo} alt="logo" />
+                </NavLink>
+
                 {navLinks.map((link, i) => (
                     <NavLink
                         key={i}
                         to={link.path}
-                        className={({ isActive }) => `text-lg ${
-                            isActive ? "text-indigo-600 font-semibold" : "text-gray-700 hover:text-indigo-600"
-                        } transition-colors`}
+                        className={({ isActive }) => `text-lg ${isActive ? "text-indigo-600 font-semibold" : "text-gray-700 hover:text-indigo-600"
+                            } transition-colors`}
                         onClick={() => setIsMenuOpen(false)}
                     >
                         {link.name}
                     </NavLink>
                 ))}
+                {user?.role === "admin" && (
+                    <button
+                        onClick={() => navigate("/adminhome")}
+                        className="cursor-pointer px-6 py-1.5 bg-indigo-600 hover:bg-indigo-700 transition text-white rounded-full text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        aria-label="Admin dashboard"
+                    >
+                        Admin
+                    </button>
+                )}
+                {user ? (<Link to='/orderdetails'>Order Details</Link>) : (null)}
+
+
 
                 {user ? (
                     <>
-                        <button 
-                            onClick={() => navigate("/profile")} 
+                        <button
+                            onClick={() => navigate("/profile")}
                             className="border border-indigo-600 px-6 py-2 text-indigo-600 font-medium rounded-full cursor-pointer transition-all hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
                             Profile
                         </button>
-                        <button 
-                            onClick={logout} 
+                        <button
+                            onClick={logout}
                             className="cursor-pointer px-8 py-2.5 bg-indigo-600 hover:bg-indigo-700 transition text-white rounded-full text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
                             Logout
                         </button>
                     </>
                 ) : (
-                    <button 
+                    <button
                         onClick={() => {
                             setShowUserLogin(true);
                             setIsMenuOpen(false);
-                        }} 
+                        }}
                         className="cursor-pointer px-8 py-2.5 bg-indigo-600 hover:bg-indigo-700 transition text-white rounded-full text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     >
                         Login

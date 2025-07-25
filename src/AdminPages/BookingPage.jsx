@@ -30,26 +30,27 @@ const AdminBlockPage = () => {
   const totalRooms = block?.rooms?.length || 0;
   const occupancyRate = totalRooms > 0 ? Math.round((blockRooms / totalRooms) * 100) : 0;
 
-  const fetchBlock = async () => {
-    try {
-      setLoading(true);
-      const res = await axios.get(`http://localhost:8087/blocks/room-details`);
-      const foundBlock = res.data.find(b => b.blockId === blockId);
-      if (foundBlock) {
-        setBlock(foundBlock);
-        setError('');
-      } else {
-        setError("Block not found");
-        toast.error("Block not found");
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Server error while fetching block details.");
-      toast.error("Failed to fetch block details");
-    } finally {
-      setLoading(false);
+const fetchBlock = async () => {
+  try {
+    setLoading(true);
+    const res = await axios.get(`http://localhost:8087/user/blocks/room-details/${blockId}`);
+    
+    if (res.data && res.data.blockId === blockId) {
+      setBlock(res.data);
+      setError('');
+    } else {
+      setError("Block not found");
+      toast.error("Block not found");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    setError("Server error while fetching block details.");
+    toast.error("Failed to fetch block details");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     fetchBlock();
@@ -151,7 +152,7 @@ const AdminBlockPage = () => {
               onClick={fetchBlock}
               className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-lg transition-colors shadow-sm"
             >
-              <FiRefreshCw className="animate-spin" />
+              <FiRefreshCw className="" />
               <span>Refresh Data</span>
             </button>
           </div>

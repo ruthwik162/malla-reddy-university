@@ -46,7 +46,7 @@ const WhyOurHostels = () => {
   ];
 
   return (
-    <section className="bg-white px-3 md:px-10  py-16">
+    <section className="bg-white px-3 md:px-10 pt-5">
       <div className="container mx-auto  p-5 bg-gradient-to-r flex flex-col items-center justify-center  from-indigo-100 to-indigo-300 rounded-2xl  max-w-9xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

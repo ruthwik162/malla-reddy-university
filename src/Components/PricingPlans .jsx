@@ -4,6 +4,7 @@ import { useAppContext } from "../AppContext/AppContext";
 import { motion } from "framer-motion";
 import { FaWifi, FaUtensils, FaBook, FaShieldAlt, FaTshirt, FaBed, FaStar, FaSearch } from "react-icons/fa";
 import { IoIosArrowForward } from "react-icons/io";
+import { useParams } from "react-router-dom";
 
 const PricingPlans = () => {
   const [plans, setPlans] = useState([]);
@@ -14,7 +15,7 @@ const PricingPlans = () => {
 
   const fetchPlans = async () => {
     try {
-      const response = await axios.get("http://localhost:8087/user/plan");
+      const response = await axios.get(`http://localhost:8087/user/plans`);
       setPlans(response.data);
     } catch (error) {
       console.error("Error fetching plans:", error);
@@ -80,8 +81,8 @@ const PricingPlans = () => {
   }
 
   return (
-    <section className="relative min-h-screen py-30 bg-gray-50 overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-1/3 bg-gradient-to-b from-indigo-600 to-indigo-500"></div>
+    <section className="relative min-h-screen py-30  overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-120 rounded-b-xl bg-gradient-to-b from-indigo-600 to-indigo-500"></div>
 
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
@@ -141,7 +142,7 @@ const PricingPlans = () => {
           >
             {filteredPlans.map((plan, index) => (
               <motion.div
-                key={plan.id}
+                key={plan._id}
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
@@ -149,7 +150,7 @@ const PricingPlans = () => {
                 className="relative"
               >
                 {plan.name.toLowerCase() === "standard plan" && (
-                  <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-lg transform translate-x-2 -translate-y-2 z-10">
+                  <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-lg rounded-br-lg transform translate-x-2 -translate-y-2 z-10">
                     Most Popular
                   </div>
                 )}
@@ -172,10 +173,10 @@ const PricingPlans = () => {
                     <p className="text-gray-600 mb-6">{plan.description}</p>
 
                     <div className="mb-6">
-                      <span className="text-3xl font-bold text-gray-900">₹{plan.priceMonthly}</span>
+                      <span className="text-3xl font-bold text-gray-900">₹{plan.price_monthly}</span>
                       <span className="text-sm text-gray-500"> /month</span>
                       <div className="text-sm text-indigo-600 mt-1">
-                        Or ₹{plan.priceYearly} billed annually
+                        Or ₹{plan.price_yearly} billed annually
                       </div>
                     </div>
 
@@ -203,7 +204,7 @@ const PricingPlans = () => {
 
                   <div className="px-6 pb-6">
                     <motion.button
-                      onClick={() => navigate(`/plan/${plan.id}`)}
+                      onClick={() => {navigate(`/plan/${plan._id}`);scrollTo(0,0)}}
                       whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.98 }}
                       className={`w-full py-3 px-6 rounded-lg font-medium flex items-center justify-center ${
@@ -234,7 +235,7 @@ const PricingPlans = () => {
             <button
               onClick={() => {
                 setSearchQuery("");
-                setActiveFilter("all");
+                setActiveFilter("all")
               }}
               className="mt-4 text-indigo-600 font-medium hover:text-indigo-800"
             >

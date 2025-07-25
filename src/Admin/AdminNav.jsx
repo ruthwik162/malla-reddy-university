@@ -62,7 +62,7 @@ const AdminNav = () => {
         <nav className={`fixed top-0 left-0  w-full flex items-center bg-cover justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${isScrolled ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4" : "py-4 md:py-6"}`}>
 
             {/* Logo */}
-            <NavLink to="/" className="hover:scale-110 transition-transform duration-200 p-2 rounded-2xl">
+            <NavLink to="/adminhome" className="hover:scale-110 transition-transform duration-200 p-2 rounded-2xl">
                 <img className="h-15 rounded w-22" src={assets.mrulogo} alt="logo" />
             </NavLink>
 
@@ -121,14 +121,25 @@ const AdminNav = () => {
                     </svg>
                 </button>
 
-                {navLinks.map((link, i) => (
-                    <a key={i} href={link.path} onClick={() => setIsMenuOpen(false)}>
-                        {link.name}
-                    </a>
-                ))}
+                <NavLink to="/adminhome" className="hover:scale-110 transition-transform duration-200 p-2 rounded-2xl">
+                    <img className="h-15 rounded w-22" src={assets.mrulogo} alt="logo" />
+                </NavLink>
 
-                <button className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all">
-                    Settings
+                {navLinks.map((link, i) => (
+                    <NavLink key={i} href={link.path} onClick={() => setIsMenuOpen(false)}>
+                        {link.name}
+                    </NavLink>
+                ))}
+                <button
+                    onClick={() => navigate("/")}
+                    className="cursor-pointer px-6 py-1.5 bg-indigo-600 hover:bg-indigo-700 transition text-white rounded-full text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    aria-label="Admin dashboard"
+                >
+                    Home
+                </button>
+
+                <button onClick={() => navigate("/profile")} className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all">
+                    Profile
                 </button>
 
                 <button onClick={logout} className="cursor-pointer px-6 py-2 mt-2 bg-indigo-500 hover:bg-indigo-400 transition text-white rounded-full text-sm">

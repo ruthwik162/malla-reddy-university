@@ -102,7 +102,7 @@ const ContactUs = () => {
   return (
     <section className="min-h-screen pt-20 bg-gray-50">
       {/* Background gradient */}
-      <div className="absolute top-0 left-0 w-full h-120 bg-gradient-to-b from-indigo-600 to-indigo-500"></div>
+      <div className="absolute top-0 left-0 w-full h-120 rounded-b-xl bg-gradient-to-b from-indigo-600 to-indigo-500"></div>
 
       <motion.div
         className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-16"

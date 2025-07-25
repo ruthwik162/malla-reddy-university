@@ -26,7 +26,7 @@ const Reports = () => {
     const fetchUsers = async () => {
       try {
         const res = await axios.get('http://localhost:8087/user/all');
-        const filteredStudents = res.data.filter(user => user.role !== 'admin');
+        const filteredStudents = res.data.filter(user => user.role !== 'admin' && user.roomId);
         setStudents(filteredStudents);
       } catch (err) {
         console.error('Error fetching students:', err);
@@ -105,7 +105,7 @@ const Reports = () => {
   }
 
   return (
-    <div className="container mx-auto py-30 px-4 max-w-full  min-h-screen bg-gray-50">
+    <div className="container mx-auto py-30 px-4 max-w-full  min-h-screen bg-gradient-to-r from-pink-600 to-purple-700 ">
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

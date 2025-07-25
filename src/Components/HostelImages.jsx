@@ -19,7 +19,7 @@ const HostelImages = () => {
   return (
 
     <section className=" min-h-full px-2 md:px-10 pt-20  bg-white overflow-hidden">
-      <div className="absolute top-0 pb-50 left-0 w-full h-150 bg-gradient-to-b from-indigo-600 to-indigo-500"></div>
+      <div className="absolute top-0 pb-50 left-0 w-full rounded-b-xl h-120 bg-gradient-to-b from-indigo-600 to-indigo-500"></div>
 
       <div className="relative overflow-hidden ">
         {/* Hero Section with Parallax Effect */}

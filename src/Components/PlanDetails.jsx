@@ -39,9 +39,8 @@ const PlanDetails = () => {
     const fetchPlans = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("http://localhost:8087/user/plan");
-        const foundRoom = response.data.find(plan => String(plan.id) === String(id));
-
+        const response = await axios.get("http://localhost:8087/user/plans");
+        const foundRoom = response.data.find(plan => String(plan._id) === String(id));
         if (foundRoom) {
           setRoom({
             ...foundRoom,
@@ -106,45 +105,45 @@ const PlanDetails = () => {
 
   const generateInvoice = (paymentId, data) => {
     setGeneratingInvoice(true);
-    
+
     try {
       const doc = new jsPDF();
-      
+
       // Set default font
       doc.setFont('helvetica', 'normal');
-      
+
       // Add header with logo and decorative elements
       doc.setFillColor(79, 70, 229);
       doc.rect(0, 0, 220, 40, 'F');
-      
+
       // Add logo text
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(24);
       doc.setFont('helvetica', 'bold');
       doc.text("ExcelR", 15, 25);
-      
+
       // Add decorative line under header
       doc.setDrawColor(255, 255, 255);
       doc.setLineWidth(0.5);
       doc.line(15, 35, 195, 35);
-      
+
       // Invoice title section
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
       doc.text("INVOICE", 105, 55, { align: 'center' });
-      
+
       // Invoice details
       doc.setFontSize(10);
       doc.setTextColor(100, 100, 100);
       doc.text(`Invoice #: INV-${paymentId.slice(0, 8).toUpperCase()}`, 15, 50);
       doc.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, 15, 55);
-      
+
       // Add decorative border
       doc.setDrawColor(200, 200, 200);
       doc.setLineWidth(0.2);
       doc.roundedRect(10, 60, 190, 140, 3, 3);
-      
+
       // Customer details section
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
@@ -153,14 +152,14 @@ const PlanDetails = () => {
       doc.text(data.user.name, 20, 77);
       doc.text(data.user.email, 20, 84);
       doc.text(data.user.mobile, 20, 91);
-      
+
       // Plan details section
       doc.setFont('helvetica', 'bold');
       doc.text("PLAN DETAILS:", 20, 105);
       doc.setFont('helvetica', 'normal');
       doc.text(`Plan: ${data.name}`, 20, 112);
       doc.text(`Subscription: Monthly`, 20, 119);
-      
+
       // Payment details section
       doc.setFont('helvetica', 'bold');
       doc.text("PAYMENT DETAILS:", 120, 70);
@@ -168,7 +167,7 @@ const PlanDetails = () => {
       doc.text(`Payment ID: ${paymentId}`, 120, 77);
       doc.text(`Payment Method: Razorpay`, 120, 84);
       doc.text(`Status: Paid`, 120, 91);
-      
+
       // Items table
       const headers = [["Description", "Amount"]];
       const invoiceData = [
@@ -177,7 +176,7 @@ const PlanDetails = () => {
         ["Discount", "-₹0"],
         ["Total", `₹${data.amount}`]
       ];
-      
+
       doc.autoTable({
         startY: 130,
         head: headers,
@@ -203,20 +202,20 @@ const PlanDetails = () => {
           doc.setTextColor(100, 100, 100);
           doc.text("Thank you for your purchase!", 105, 280, { align: 'center' });
           doc.text("For any queries, contact support@excelr.com", 105, 285, { align: 'center' });
-          
+
           // Company info footer
           doc.setFontSize(8);
           doc.text("ExcelR Hostels, 123 Education Street, Bangalore, Karnataka 560001", 105, 290, { align: 'center' });
           doc.text("GSTIN: 22AAAAA0000A1Z5 | CIN: U80302KA2022PTC123456", 105, 295, { align: 'center' });
         }
       });
-      
+
       // Add watermark
       doc.setFontSize(60);
       doc.setTextColor(230, 230, 230);
       doc.setFont('helvetica', 'bold');
       doc.text("PAID", 60, 150, { angle: 45 });
-      
+
       doc.save(`Invoice_${paymentId.slice(0, 8)}.pdf`);
     } catch (error) {
       console.error("Error generating invoice:", error);
@@ -260,36 +259,37 @@ const PlanDetails = () => {
 
   return (
     <AnimatePresence>
-      <section className="relative min-h-screen py-30 bg-gray-50 overflow-hidden">
+      <section className="relative min-h-screen py-20 bg-gray-50 overflow-hidden">
         {/* Decorative elements */}
-        <div className="absolute top-0 left-0 w-full h-1/3 bg-gradient-to-b from-indigo-600 to-indigo-500"></div>
-        
-        <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="absolute top-0 left-0 w-full h-120 rounded-b-xl bg-gradient-to-br from-indigo-600/90 via-indigo-700/80 to-indigo-800/70"></div>
+
+        <div className="relative max-w-7xl max-h-5xl z-10 container mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center mb-12"
           >
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center text-white hover:text-indigo-200 mb-8 transition"
-            >
-              <FiArrowLeft className="mr-2" /> Back to Plans
-            </button>
             
+
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">{room.name} Plan Details</h2>
             <p className="text-lg text-indigo-100 max-w-2xl mx-auto">
               Everything you need to know about our {room.name.toLowerCase()} accommodation
             </p>
           </motion.div>
-
+          <button
+              onClick={() => navigate(-1)}
+              className="flex items-center text-white cursor-pointer border-2 p-3 rounded-2xl hover:text-indigo-200 mb-8 transition"
+            >
+              <FiArrowLeft className="mr-2" /> Back to Plans
+            </button>
           <motion.div
             initial="hidden"
             animate="visible"
             variants={fadeUp}
             className="bg-white rounded-2xl shadow-xl overflow-hidden"
           >
+            
             <div className="md:flex">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -310,14 +310,14 @@ const PlanDetails = () => {
 
               <div className="p-8 md:w-1/2">
                 <motion.div variants={stagger}>
-                  <motion.h1 
+                  <motion.h1
                     variants={fadeUp}
                     className="text-3xl font-bold text-gray-900 mb-2"
                   >
                     {room.name} Accommodation
                   </motion.h1>
-                  
-                  <motion.p 
+
+                  <motion.p
                     variants={fadeUp}
                     className="text-gray-600 mb-6"
                   >
@@ -325,38 +325,38 @@ const PlanDetails = () => {
                   </motion.p>
 
                   {/* Pricing card with decorative elements */}
-                  <motion.div 
+                  <motion.div
                     variants={fadeUp}
                     className="bg-indigo-50 p-6 rounded-xl mb-8 relative overflow-hidden"
                   >
                     <div className="absolute -right-10 -top-10 w-32 h-32 bg-indigo-100 rounded-full opacity-20"></div>
                     <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-indigo-200 rounded-full opacity-10"></div>
-                    
+
                     <div className="relative z-10 flex justify-between items-center mb-4">
                       <div>
                         <p className="text-gray-500 text-sm">Monthly Price</p>
-                        <p className="text-2xl font-bold text-indigo-700">₹{room.priceMonthly}</p>
+                        <p className="text-2xl font-bold text-indigo-700">₹{room.price_monthly}</p>
                       </div>
                       <div className="text-right">
                         <p className="text-gray-500 text-sm">Yearly (Save 20%)</p>
-                        <p className="text-2xl font-bold text-indigo-700">₹{room.priceYearly}</p>
+                        <p className="text-2xl font-bold text-indigo-700">₹{room.price_yearly}</p>
                       </div>
                     </div>
                     <p className="relative z-10 text-xs text-gray-500">* Prices inclusive of all taxes</p>
                   </motion.div>
 
                   {/* Features with icons */}
-                  <motion.div 
+                  <motion.div
                     variants={fadeUp}
                     className="mb-8"
                   >
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Plan Features</h3>
-                    <motion.ul 
+                    <motion.ul
                       variants={stagger}
                       className="grid grid-cols-1 sm:grid-cols-2 gap-3"
                     >
                       {room.features.split(',').map((feature, idx) => (
-                        <motion.li 
+                        <motion.li
                           key={idx}
                           variants={fadeUp}
                           className="flex items-start"
@@ -369,7 +369,7 @@ const PlanDetails = () => {
                   </motion.div>
 
                   {/* Amenities section with decorative icons */}
-                  <motion.div 
+                  <motion.div
                     variants={fadeUp}
                     className="mb-8 bg-gray-50 p-5 rounded-xl"
                   >
@@ -395,7 +395,7 @@ const PlanDetails = () => {
                   </motion.div>
 
                   {/* Action buttons */}
-                  <motion.div 
+                  <motion.div
                     variants={fadeUp}
                     className="flex flex-col sm:flex-row gap-4"
                   >
@@ -447,10 +447,10 @@ const PlanDetails = () => {
           >
             <div className="absolute -right-20 -top-20 w-40 h-40 bg-indigo-100 rounded-full opacity-10"></div>
             <div className="absolute -left-10 -bottom-10 w-32 h-32 bg-indigo-200 rounded-full opacity-5"></div>
-            
+
             <div className="relative z-10">
               <h3 className="text-xl font-bold text-gray-800 mb-6">What Our Residents Say</h3>
-              
+
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="bg-gray-50 p-6 rounded-lg">
                   <div className="flex items-center mb-4">
@@ -466,7 +466,7 @@ const PlanDetails = () => {
                   </div>
                   <p className="text-gray-600 italic">"The {room.name} plan offers great value for money. The facilities are well-maintained and the staff is very helpful."</p>
                 </div>
-                
+
                 <div className="bg-gray-50 p-6 rounded-lg">
                   <div className="flex items-center mb-4">
                     <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold mr-3">MP</div>

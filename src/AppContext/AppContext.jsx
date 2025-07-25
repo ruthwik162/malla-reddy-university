@@ -10,16 +10,11 @@ export const AppContextProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [showUserLogin, setShowUserLogin] = useState(false);
 
-  // Fetch user from sessionStorage or localStorage when the app starts
+  // Load user on mount from sessionStorage or localStorage
   useEffect(() => {
-    const sessionUser = sessionStorage.getItem("user");
-    if (sessionUser) {
-      setUser(JSON.parse(sessionUser));
-    } else {
-      const localUser = localStorage.getItem("user");
-      if (localUser) {
-        setUser(JSON.parse(localUser));
-      }
+    const storedUser = sessionStorage.getItem("user") || localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
     }
   }, []);
 
@@ -27,62 +22,60 @@ export const AppContextProvider = ({ children }) => {
   const register = async (formData) => {
     try {
       await axios.post("http://localhost:8087/user/register", formData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
       });
       toast.success("Registration successful! Please log in.");
       navigate("/");
-      setShowUserLogin(true)
+      setShowUserLogin(true);
     } catch (error) {
-      console.error("Registration error:", error.response);
-      toast.error(error.response?.data?.message || "Error registering user.");
+      console.error("Registration error:", error);
+      toast.error(error.response?.data?.message || "Registration failed.");
     }
   };
 
-  // Login User (No profile fetching after login)
-  const login = async (email, password) => {
-    try {
-      const response = await axios.post("http://localhost:8087/user/login", {
-        email,
-        password,
-      }, {
-        headers: { "Content-Type": "application/json" },
-        withCredentials: true,
-      });
-  
-      if (response.status === 200) {
-        const user = response.data;
-  
-        if (!user || !user.id) {
-          toast.error("Login failed: Invalid user data");
-          return;
-        }
-  
-        const userDetails = {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          mobile: user.mobile,
-          role: user.role,
-          gender: user.gender,
-        };
-  
-        localStorage.setItem("user", JSON.stringify(userDetails));
-        sessionStorage.setItem("user", JSON.stringify(userDetails));
-        setUser(userDetails);
-  
-        toast.success("Logged in successfully!");
-        navigate(user.role === "admin" ? "/adminhome" : "/");
-        setShowUserLogin(false)
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      toast.error(error.response?.data?.message || "Login failed.");
+  // Login User
+const login = async (email, password) => {
+  try {
+    const response = await axios.post("http://localhost:8087/user/login", {
+      email,
+      password,
+    }, {
+      headers: { "Content-Type": "application/json" },
+      withCredentials: true,
+    });
+
+    console.log("Login response:", response.data); // helpful for debugging
+
+    // ✅ Fix: fallback to raw response if `user` is not wrapped
+    const user = response.data.user || response.data;
+
+    if (!user || !user._id) {
+      toast.error("Login failed: Invalid user data");
+      return;
     }
-  };
-  
-  
+
+    const userDetails = {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      mobile: user.mobile,
+      role: user.role,
+      gender: user.gender,
+    };
+
+    localStorage.setItem("user", JSON.stringify(userDetails));
+    sessionStorage.setItem("user", JSON.stringify(userDetails));
+    setUser(userDetails);
+
+    toast.success("Logged in successfully!");
+    navigate(user.role === "admin" ? "/adminhome" : "/");
+    setShowUserLogin(false);
+  } catch (error) {
+    console.error("Login error:", error);
+    toast.error(error.response?.data?.message || "Login failed.");
+  }
+};
+
 
   // Logout User
   const logout = () => {
@@ -93,20 +86,23 @@ export const AppContextProvider = ({ children }) => {
     navigate("/");
   };
 
-  // Value to be provided in context
-  const values = {
-    user,
-    setUser,
-    showUserLogin,
-    setShowUserLogin,
-    register,
-    login,
-    logout,
-    navigate,
-  };
-
-  return <AppContext.Provider value={values}>{children}</AppContext.Provider>;
+  return (
+    <AppContext.Provider
+      value={{
+        user,
+        setUser,
+        showUserLogin,
+        setShowUserLogin,
+        register,
+        login,
+        logout,
+        navigate,
+      }}
+    >
+      {children}
+    </AppContext.Provider>
+  );
 };
 
-// Custom hook to use AppContext
+// Hook to use the context
 export const useAppContext = () => useContext(AppContext);
