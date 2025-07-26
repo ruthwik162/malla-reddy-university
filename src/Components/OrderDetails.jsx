@@ -121,7 +121,7 @@ const OrderCard = ({ order }) => {
                         : 'bg-yellow-100 text-yellow-800'
                         }`}>
                         {status}
-                    </span>
+                    </span> 
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -134,7 +134,7 @@ const OrderCard = ({ order }) => {
 
                     <div className="space-y-4">
                         <DetailItem icon={FiHome} label="Room Number" value={order.room?.number} />
-                        <DetailItem icon={FiHash} label="Bed Number" value={`${order.bedId} `} />
+                        <DetailItem icon={FiHash} label="Bed Number" value={`Bed Number: ${order.bedId} `} />
                         <DetailItem icon={FiShield} label="Gender" value={order.gender ? `${order.gender.charAt(0).toUpperCase() + order.gender.slice(1)}` : 'N/A'} />
                         <DetailItem icon={FiBookmark} label="Plan ID" value={order.planId} />
                     </div>

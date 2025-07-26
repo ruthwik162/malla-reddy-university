@@ -3,4 +3,9 @@
 
 body {
     overflow-x: hidden;
+    
   }
+
+  html {
+  color-scheme: light;
+}
