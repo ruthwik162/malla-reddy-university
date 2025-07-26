@@ -7,6 +7,7 @@ import autoTable from 'jspdf-autotable';
 import { FiCheck, FiStar, FiArrowLeft, FiDownload, FiLoader } from 'react-icons/fi';
 import { FaWifi, FaUtensils, FaBook, FaShieldAlt, FaTshirt, FaBed, FaStar } from 'react-icons/fa';
 import { useAppContext } from '../AppContext/AppContext';
+import toast from 'react-hot-toast';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
@@ -32,7 +33,7 @@ const PlanDetails = () => {
   const [existingBooking, setExistingBooking] = useState(null);
   const { id } = useParams();
   const navigate = useNavigate();
-  const { url } = useAppContext();
+  const { url ,setShowUserLogin} = useAppContext();
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -85,82 +86,87 @@ const PlanDetails = () => {
     checkExistingBooking();
   }, [url]);
 
-  const handlePayment = async () => {
-    const storedUser = JSON.parse(localStorage.getItem("user"));
+const handlePayment = async () => {
+  const storedUser = JSON.parse(localStorage.getItem("user"));
 
-    if (!storedUser?.email) {
-      alert("Please login to complete your booking");
-      navigate('/login');
-      return;
-    }
+  if (!storedUser?.email) {
+    toast.error("Please login to complete your booking");
+    setShowUserLogin(true);
+    return;
+  }
 
-    try {
-      const mockPaymentId = `PAY${Date.now().toString().slice(-8)}MRU`;
+  try {
+    const mockPaymentId = `PAY${Date.now().toString().slice(-8)}MRU`;
 
-      const payload = {
-        name: storedUser.username || "MRU Student",
-        email: storedUser.email,
-        mobile: storedUser.mobile || "Not Provided",
-        address: "Malla Reddy University Campus",
-        gender: storedUser.gender || "other",
-        planId: id,
-        paymentId: mockPaymentId,
-        totalAmount: room.priceMonthly || room.price_yearly / 12
+    const payload = {
+      name: storedUser.username || "MRU Student",
+      email: storedUser.email,
+      mobile: storedUser.mobile || "Not Provided",
+      address: "Malla Reddy University Campus",
+      gender: storedUser.gender || "other",
+      planId: id,
+      paymentId: mockPaymentId,
+      totalAmount: room.priceMonthly || room.price_yearly / 12
+    };
+
+    console.log("Submitting booking with payload:", payload);
+
+    const response = await axios.post(`${url}/user/save-order`, payload, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      timeout: 10000
+    });
+
+    if (response.status === 201 && response.data?.orderId) {
+      const bookingData = {
+        ...response.data,
+        user: {
+          name: storedUser.username,
+          email: storedUser.email,
+          mobile: storedUser.mobile,
+          gender: storedUser.gender
+        },
+        amount: payload.totalAmount
       };
 
-      console.log("Submitting booking with payload:", payload);
+      setOrderData(bookingData);
+      setBookingSuccess(true);
+      setAlreadyBooked(true);
 
-      const response = await axios.post(`${url}/user/save-order`, payload, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        timeout: 10000
-      });
-
-      if (response.data.message?.includes("Succesfully Booked")) {
-        const bookingData = {
-          ...response.data,
-          user: {
-            name: storedUser.username,
-            email: storedUser.email,
-            mobile: storedUser.mobile,
-            gender: storedUser.gender
-          },
-          amount: payload.totalAmount
-        };
-
-        setOrderData(bookingData);
-        setBookingSuccess(true);
-        setAlreadyBooked(true);
-
-        alert(`🎉 Booking Confirmed!\n\nRoom: ${response.data.roomNumber}\nBlock: ${response.data.blockName}\nAmount: ₹${payload.totalAmount}`);
-      } else {
-        throw new Error(response.data.message || "Unexpected response from server");
-      }
-    } catch (error) {
-      console.error("Booking error details:", {
-        error: error.response?.data || error.message,
-        config: error.config
-      });
-
-      let errorMessage = "Booking failed. Please try again.";
-
-      if (error.response) {
-        if (error.response.status === 400) {
-          errorMessage = "Validation error: " +
-            (error.response.data.errors?.map(e => e.msg).join(", ") ||
-              error.response.data.message);
-        } else if (error.response.status === 500) {
-          errorMessage = "Server error. Please contact support if this persists.";
-        }
-      } else if (error.code === 'ECONNABORTED') {
-        errorMessage = "Request timed out. Check your internet connection.";
-      }
-
-      alert(errorMessage);
+      alert(`🎉 Booking Confirmed!\n\nRoom: ${response.data.roomNumber}\nBlock: ${response.data.blockName}\nAmount: ₹${payload.totalAmount}`);
+    } else {
+      console.warn("Unexpected response from server:", response.data);
+      throw new Error("Unexpected booking response. Please contact support.");
     }
-  };
+  } catch (error) {
+    console.error("Booking error details:", {
+      error: error.response?.data || error.message,
+      config: error.config
+    });
+
+    let errorMessage = "Booking failed. Please try again.";
+
+    if (error.response) {
+      if (error.response.status === 400) {
+        errorMessage =
+          "Validation error: " +
+          (error.response.data.errors?.map(e => e.msg).join(", ") ||
+            error.response.data.message);
+      } else if (error.response.status === 500) {
+        errorMessage = "Server error. Please contact support if this persists.";
+      } else {
+        errorMessage = error.response.data?.message || errorMessage;
+      }
+    } else if (error.code === 'ECONNABORTED') {
+      errorMessage = "Request timed out. Check your internet connection.";
+    }
+
+    alert(errorMessage);
+  }
+};
+
 
 const downloadInvoice = async () => {
   setGeneratingInvoice(true);
