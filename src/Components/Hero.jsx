@@ -43,7 +43,7 @@ const Hero = () => {
   return (
     <div className="relative flex md:px-10  flex-col items-center justify-center w-full min-h-screen pt-30 md:pt-60 text-white bg-white bg-cover bg-center bg-no-repeat">
       {/* Enhanced gradient overlay */}
-      <div className="absolute top-0 left-0 w-full h-120 rounded-b-xl bg-gradient-to-br from-indigo-600/90 via-indigo-700/80 to-indigo-800/70"></div>
+      <div className="absolute top-0 left-0 w-full h-120 rounded-b-xl bg-gradient-to-b from-indigo-600 to-indigo-500"></div>
 
       <motion.div
         className="relative z-10 w-full max-w-9xl px-3 mx-auto"

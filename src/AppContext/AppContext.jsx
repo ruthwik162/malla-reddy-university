@@ -9,16 +9,21 @@ export const AppContextProvider = ({ children }) => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [showUserLogin, setShowUserLogin] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
 
   // 🔁 Replace this with your actual backend URL
   const url = "https://hostel-backend-bsza.onrender.com";
 
-  // Load user on mount from sessionStorage or localStorage
+  // Configure axios for cookie support
+  axios.defaults.withCredentials = true;
+
+  // Load user from storage on mount (no auto-expiry check)
   useEffect(() => {
-    const storedUser = sessionStorage.getItem("user") || localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const stored = localStorage.getItem("user") || sessionStorage.getItem("user");
+    if (stored) {
+      setUser(JSON.parse(stored));
     }
+    setAuthChecked(true);
   }, []);
 
   // Register User
@@ -39,30 +44,25 @@ export const AppContextProvider = ({ children }) => {
   // Login User
   const login = async (email, password) => {
     try {
-      const response = await axios.post(`${url}/user/login`, {
-        email,
-        password,
-      }, {
-        headers: { "Content-Type": "application/json" },
-        withCredentials: true,
-      });
+      const response = await axios.post(
+        `${url}/user/login`,
+        { email, password },
+        { headers: { "Content-Type": "application/json" } }
+      );
 
-      console.log("Login response:", response.data); // helpful for debugging
-
-      const user = response.data.user || response.data;
-
-      if (!user || !user._id) {
+      const u = response.data.user || response.data;
+      if (!u || !u._id) {
         toast.error("Login failed: Invalid user data");
         return;
       }
 
       const userDetails = {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        mobile: user.mobile,
-        role: user.role,
-        gender: user.gender,
+        id: u._id,
+        username: u.username,
+        email: u.email,
+        mobile: u.mobile,
+        gender: u.gender,
+        role: u.role,
       };
 
       localStorage.setItem("user", JSON.stringify(userDetails));
@@ -70,7 +70,7 @@ export const AppContextProvider = ({ children }) => {
       setUser(userDetails);
 
       toast.success("Logged in successfully!");
-      navigate(user.role === "admin" ? "/adminhome" : "/");
+      navigate(u.role === "admin" ? "/adminhome" : "/");
       setShowUserLogin(false);
     } catch (error) {
       console.error("Login error:", error);
@@ -86,6 +86,11 @@ export const AppContextProvider = ({ children }) => {
     toast.success("Logged out successfully!");
     navigate("/");
   };
+
+  // Don't render children until auth check is done
+  if (!authChecked) {
+    return null;
+  }
 
   return (
     <AppContext.Provider

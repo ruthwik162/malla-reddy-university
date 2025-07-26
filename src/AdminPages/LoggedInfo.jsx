@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { assets } from '../assets/assets';
 import { Link } from 'react-router-dom';
 import { useAppContext } from '../AppContext/AppContext';
+import { FiLoader } from 'react-icons/fi';
 
 const COLORS = ['#6366f1', '#c7d2fe'];
 const COLORS_SECONDARY = ['#10b981', '#a7f3d0'];
@@ -112,14 +113,14 @@ const LoggedInfo = () => {
     students: true,
     messages: true
   });
-  const {url} = useAppContext();
+  const { url } = useAppContext();
 
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const res = await axios.get(`${url}/user/all`);
-        const filteredStudents = res.data.filter((user) => user.role !== 'admin' && user.roomId );
+        const filteredStudents = res.data.filter((user) => user.role !== 'admin' && user.roomId);
         setStudents(filteredStudents);
       } catch (error) {
         toast.error('Failed to fetch users');
@@ -378,8 +379,27 @@ const LoggedInfo = () => {
             </div>
 
             {isLoading.students ? (
-              <div className="flex justify-center items-center h-32">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+              <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                <div className="flex flex-col items-center space-y-4">
+                  {/* Animated spinner with gradient */}
+                  
+                  <FiLoader className='w-10 h-10 animate-spin text-indigo-600' />
+
+                  {/* Loading text with animated dots */}
+                  <div className="flex flex-col items-center space-y-2">
+                    <h3 className="text-xl font-semibold text-gray-700">Loading Hostel Reports...</h3>
+                    <p className="text-gray-500">Please wait while we fetch the best reports for you</p>          <div className="flex space-x-1">
+                      {[...Array(4)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="h-2 w-2 bg-indigo-400 rounded-full animate-bounce"
+                          style={{ animationDelay: `${i * 0.2}s` }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -426,10 +446,10 @@ const LoggedInfo = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${user.gender === 'male'
-                              ? 'bg-blue-100 text-blue-800'
-                              : user.gender === 'female'
-                                ? 'bg-pink-100 text-pink-800'
-                                : 'bg-purple-100 text-purple-800'
+                            ? 'bg-blue-100 text-blue-800'
+                            : user.gender === 'female'
+                              ? 'bg-pink-100 text-pink-800'
+                              : 'bg-purple-100 text-purple-800'
                             }`}>
                             {user.gender || 'other'}
                           </span>
@@ -480,8 +500,27 @@ const LoggedInfo = () => {
             </div>
 
             {isLoading.messages ? (
-              <div className="flex justify-center items-center h-32">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+              <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                <div className="flex flex-col items-center space-y-4">
+                  {/* Animated spinner with gradient */}
+                  
+                  <FiLoader className='w-10 h-10 animate-spin text-indigo-600' />
+
+                  {/* Loading text with animated dots */}
+                  <div className="flex flex-col items-center space-y-2">
+                    <h3 className="text-xl font-semibold text-gray-700">Loading Hostel Reports...</h3>
+                    <p className="text-gray-500">Please wait while we fetch the best reports for you</p>          <div className="flex space-x-1">
+                      {[...Array(4)].map((_, i) => (
+                        <div
+                          key={i}
+                          className="h-2 w-2 bg-indigo-400 rounded-full animate-bounce"
+                          style={{ animationDelay: `${i * 0.2}s` }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
               </div>
             ) : messages.length === 0 ? (
               <div className="text-center py-8">

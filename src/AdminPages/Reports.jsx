@@ -112,8 +112,8 @@ const Reports = () => {
 
           {/* Loading text with animated dots */}
           <div className="flex flex-col items-center space-y-2">
-            <h3 className="text-xl font-semibold text-gray-700">Loading Hostel Plans...</h3>
-            <p className="text-gray-500">Please wait while we fetch the best options for you</p>          <div className="flex space-x-1">
+            <h3 className="text-xl font-semibold text-gray-700">Loading Hostel Reports...</h3>
+            <p className="text-gray-500">Please wait while we fetch the best reports for you</p>          <div className="flex space-x-1">
               {[...Array(4)].map((_, i) => (
                 <div
                   key={i}

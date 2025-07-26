@@ -211,6 +211,7 @@ const Navbar = () => {
 
             {/* Mobile Menu Button */}
             <div className="flex items-center gap-3 md:hidden">
+                {/* login & logout buttons beside hambarger */}
                 {!user ? (
                     <button
                         onClick={() => setShowUserLogin(true)}
@@ -229,6 +230,7 @@ const Navbar = () => {
                     </button>
                 )}
 
+                {/* Hamberger menu */}
                 <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                     className="focus:outline-none"
@@ -256,8 +258,6 @@ const Navbar = () => {
                     }`}
                 aria-hidden={!isMenuOpen}
             >
-
-
                 <button
                     className="absolute top-6 right-6 focus:outline-none"
                     onClick={() => setIsMenuOpen(false)}
@@ -283,6 +283,8 @@ const Navbar = () => {
                         {link.name}
                     </NavLink>
                 ))}
+
+                {/* admin Navlinks */}
                 {user?.role === "admin" && (
                     <button
                         onClick={() => navigate("/adminhome")}
@@ -292,10 +294,10 @@ const Navbar = () => {
                         Admin
                     </button>
                 )}
-                {user ? (<Link to='/orderdetails'>Order Details</Link>) : (null)}
+                {user?.role === "user" ? <Link to='/orderdetails'>Order Details</Link> : null}
 
 
-
+                {/* if user logged in */}
                 {user ? (
                     <>
                         <button

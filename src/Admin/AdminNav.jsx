@@ -35,23 +35,7 @@ const AdminNav = () => {
         };
         fetchUser();
     }, [user, setUser]);
-    useEffect(() => {
-        const fetchUser = async () => {
-            const storedUser = JSON.parse(localStorage.getItem("user")) || JSON.parse(sessionStorage.getItem("user"));
-            const email = storedUser?.email;
 
-            if (!user && email) {
-                try {
-                    const res = await fetch(`${url}/user/profile?email=${email}`);
-                    const data = await res.json();
-                    setUser(data);
-                } catch (err) {
-                    console.error("Failed to fetch user profile:", err);
-                }
-            }
-        };
-        fetchUser();
-    }, [user, setUser]);
 
 
     useEffect(() => {
@@ -128,7 +112,7 @@ const AdminNav = () => {
                 </NavLink>
 
                 {navLinks.map((link, i) => (
-                    <NavLink key={i} href={link.path} onClick={() => setIsMenuOpen(false)}>
+                    <NavLink key={i} to={link.path} onClick={() => setIsMenuOpen(false)}>
                         {link.name}
                     </NavLink>
                 ))}
