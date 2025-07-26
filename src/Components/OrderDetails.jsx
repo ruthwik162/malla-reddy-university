@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { useAppContext } from '../AppContext/AppContext';
-import { FiLoader } from 'react-icons/fi';
+import { FiAlertTriangle, FiLoader, FiRefreshCw } from 'react-icons/fi';
+import { div } from 'framer-motion/client';
 
 // Loading Spinner
 const LoadingSpinner = () => (
@@ -13,15 +14,29 @@ const LoadingSpinner = () => (
 
 // Error Message
 const ErrorMessage = ({ message, onRetry }) => (
-    <div className="text-center py-10">
-        <div className="text-red-500 text-lg font-medium mb-4">{message}</div>
-        <button
-            onClick={onRetry}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
-        >
-            Try Again
-        </button>
+    <div className='flex items-center py-28 justify-center'>
+        <div className="text-center py-10 px-4 max-w-md mx-auto">
+        <div className="flex flex-col items-center">
+            <FiAlertTriangle 
+                className="text-red-500 text-4xl mb-3" 
+                aria-hidden="true"
+            />
+            <h2 className="text-red-500 text-xl font-semibold mb-2">
+                Something went wrong
+            </h2>
+            <p className="text-gray-600 mb-6">{message}</p>
+            <button
+                onClick={onRetry}
+                className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                aria-label="Retry"
+            >
+                <FiRefreshCw className="text-lg" />
+                Try Again
+            </button>
+        </div>
     </div>
+    </div>
+    
 );
 
 // Empty State
