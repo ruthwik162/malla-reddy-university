@@ -19,8 +19,13 @@ import {
     FiHash,
     FiShield,
     FiBookmark,
-    FiClock as FiExpiry
+    FiClock as FiExpiry,
+    FiLayers,
+    
+    FiNavigation,
+    FiAlertCircle
 } from 'react-icons/fi';
+import { BsFillBuildingFill } from 'react-icons/bs';
 
 // Loading Spinner
 const LoadingSpinner = () => (
@@ -87,23 +92,32 @@ const OrderCard = ({ order }) => {
         });
     };
 
-    const DetailItem = ({ icon: Icon, label, value, className = '' }) => (
+    const DetailItem = ({ icon: Icon, label, value, className = '', isLink = false }) => (
         <div className={`flex items-start gap-3 ${className}`}>
             <div className="p-2 bg-indigo-50 rounded-full text-indigo-600">
                 <Icon size={16} />
             </div>
             <div className="flex-1">
                 <p className="text-sm text-gray-500">{label}</p>
-                <p className="font-medium text-gray-800">{value || 'Not provided'}</p>
+                {isLink ? (
+                    <a 
+                        href={`tel:${value}`} 
+                        className="font-medium text-indigo-600 hover:text-indigo-800 hover:underline"
+                    >
+                        {value || 'Not provided'}
+                    </a>
+                ) : (
+                    <p className="font-medium text-gray-800">{value || 'Not provided'}</p>
+                )}
             </div>
         </div>
     );
 
     return (
         <div className="bg-white rounded-xl shadow-md overflow-hidden mb-6 hover:shadow-lg transition-shadow border border-gray-100 relative">
-            {/* Decorative indigo accent */}
+            {/* Decorative stripe */}
 
-            <div className="p-6 pl-8"> {/* Added padding to account for the decorative stripe */}
+            <div className="p-6 pl-8">
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-full ${status === 'Confirmed' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'}`}>
@@ -125,26 +139,41 @@ const OrderCard = ({ order }) => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Personal Information */}
                     <div className="space-y-4">
+                        <h4 className="text-md font-semibold text-gray-700 border-b pb-2 flex items-center gap-2">
+                            <FiUser className="text-indigo-600" />
+                            Personal Information
+                        </h4>
                         <DetailItem icon={FiUser} label="Student Name" value={order.name} />
                         <DetailItem icon={FiMail} label="Email" value={order.email} />
-                        <DetailItem icon={FiPhone} label="Mobile" value={order.mobile} />
-                        <DetailItem icon={FiMapPin} label="Address" value={order.address} />
+                        <DetailItem icon={FiPhone} label="Mobile" value={order.mobile} isLink />
+                        <DetailItem icon={FiShield} label="Gender" value={order.gender ? `${order.gender.charAt(0).toUpperCase() + order.gender.slice(1)}` : 'N/A'} />
                     </div>
 
+                    {/* Accommodation Details */}
                     <div className="space-y-4">
-                        <DetailItem icon={FiHome} label="Room Number" value={order.room?.number} />
-                        <DetailItem icon={FiHash} label="Bed Number" value={`Bed Number: ${order.bedId} `} />
-                        <DetailItem icon={FiShield} label="Gender" value={order.gender ? `${order.gender.charAt(0).toUpperCase() + order.gender.slice(1)}` : 'N/A'} />
-                        <DetailItem icon={FiBookmark} label="Plan ID" value={order.planId} />
+                        <h4 className="text-md font-semibold text-gray-700 border-b pb-2 flex items-center gap-2">
+                            <FiHome className="text-indigo-600" />
+                            Accommodation Details
+                        </h4>
+                        <DetailItem icon={BsFillBuildingFill} label="Block" value={order.block?.name} />
+                        <DetailItem icon={FiNavigation} label="Room Number" value={order.room?.number} />
+                        <DetailItem icon={FiLayers} label="Bed Number" value={`Bed ${order.bedId}`} />
+                        <DetailItem icon={FiMapPin} label="Address" value={order.address} />
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                    {/* Payment Information */}
                     <div className="space-y-4">
+                        <h4 className="text-md font-semibold text-gray-700 border-b pb-2 flex items-center gap-2">
+                            <FiDollarSign className="text-indigo-600" />
+                            Payment Information
+                        </h4>
                         <DetailItem
                             icon={FiDollarSign}
-                            label="Payment Amount"
+                            label="Total Amount"
                             value={`₹${order.totalAmount?.toLocaleString('en-IN')}`}
                         />
                         <DetailItem
@@ -152,9 +181,19 @@ const OrderCard = ({ order }) => {
                             label="Payment ID"
                             value={order.paymentId}
                         />
+                        <DetailItem
+                            icon={FiBookmark}
+                            label="Plan ID"
+                            value={order.planId}
+                        />
                     </div>
 
+                    {/* Dates */}
                     <div className="space-y-4">
+                        <h4 className="text-md font-semibold text-gray-700 border-b pb-2 flex items-center gap-2">
+                            <FiCalendar className="text-indigo-600" />
+                            Important Dates
+                        </h4>
                         <DetailItem
                             icon={FiCalendar}
                             label="Booking Date"
@@ -170,13 +209,27 @@ const OrderCard = ({ order }) => {
                 </div>
 
                 {status === 'Confirmed' && (
-                    <div className="mt-6 pt-4 border-t border-gray-100 flex justify-end">
-                        <button
-                            onClick={() => toast.success('Download functionality will be added soon')}
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition text-sm flex items-center gap-2"
-                        >
-                            Download Receipt
-                        </button>
+                    <div className="mt-6 pt-4 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                        <div className="bg-blue-50 p-3 rounded-lg w-full sm:w-auto">
+                            <p className="text-sm text-blue-700">
+                                <strong>Note:</strong> Your room is confirmed at {order.block?.name}, {order.room?.number}. 
+                                Please check in at the hostel reception with your ID proof.
+                            </p>
+                        </div>
+                        <div className="flex gap-3 w-full sm:w-auto">
+                            <button
+                                onClick={() => toast.success('Download functionality will be added soon')}
+                                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition text-sm flex items-center gap-2 w-full justify-center sm:w-auto"
+                            >
+                                Download Receipt
+                            </button>
+                            <button
+                                onClick={() => toast.success('Contact support functionality will be added soon')}
+                                className="px-4 py-2 bg-white border border-indigo-600 text-indigo-600 rounded-md hover:bg-indigo-50 transition text-sm flex items-center gap-2 w-full justify-center sm:w-auto"
+                            >
+                                Contact Support
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>
@@ -279,12 +332,10 @@ const OrderDetails = () => {
             <div className="absolute top-0 left-0 w-full h-120 rounded-b-xl bg-gradient-to-b from-indigo-600 to-indigo-500"></div>
             <div className="max-w-4xl mt-20 mx-auto relative">
                 <div className="text-center mb-12">
-                    <h1 className="text-3xl font-bold text-gray-800 mb-2 relative">
-                        <span className="relative z-10">
-                            Your Hostel Bookings
-                        </span>
+                    <h1 className="text-3xl font-bold text-white mb-2 relative">
+                        Your Hostel Bookings
                     </h1>
-                    <p className="text-gray-600">Review and manage your accommodation details</p>
+                    <p className="text-indigo-100">Review and manage your accommodation details</p>
                 </div>
 
                 <div className="space-y-6">
