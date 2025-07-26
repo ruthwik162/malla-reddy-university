@@ -134,7 +134,7 @@ const AdminNav = () => {
                 ))}
                 <button
                     onClick={() => navigate("/")}
-                    className="cursor-pointer px-6 py-1.5 bg-indigo-600 hover:bg-indigo-700 transition text-white rounded-full text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    className="cursor-pointer px-6 py-1.5 bg-indigo-600 flex items-center justify-center gap-2 hover:bg-indigo-700 transition text-white rounded-full text-sm font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                     aria-label="Admin dashboard"
                 >
                     <span>Home</span>

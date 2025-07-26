@@ -2,25 +2,25 @@
 <html>
   <head>
     <meta charset="utf-8" />
-    <title>Teacher-Student Appointment</title>
+    <title>Malla Reddy University Hostels</title>
     <script type="text/javascript">
-      var pathSegmentsToKeep = 1;
+      (function () {
+        const { protocol, host, pathname, search, hash } = window.location;
+        const pathSegments = pathname.split("/").filter(Boolean);
 
-      var l = window.location;
-      l.replace(
-        l.protocol +
-          "//" +
-          l.hostname +
-          (l.port ? ":" + l.port : "") +
-          l.pathname
-            .split("/")
-            .slice(0, 1 + pathSegmentsToKeep)
-            .join("/") +
-          "/?/" +
-          l.pathname.slice(1).split("/").slice(pathSegmentsToKeep).join("/").replace(/&/g, "~and~") +
-          (l.search ? "&" + l.search.slice(1).replace(/&/g, "~and~") : "") +
-          l.hash
-      );
+        // Only redirect if deeper path exists (e.g., /hostels/room-details)
+        if (pathSegments.length > 1 && pathSegments[0] !== "?") {
+          const basePath = pathSegments.slice(0, 1).join("/");
+          const remainingPath = pathSegments.slice(1).join("/");
+
+          const newUrl =
+            `${protocol}//${host}/${basePath}/?/${remainingPath}` +
+            (search ? "&" + search.slice(1).replace(/&/g, "~and~") : "") +
+            hash;
+
+          window.location.replace(newUrl);
+        }
+      })();
     </script>
   </head>
   <body></body>
