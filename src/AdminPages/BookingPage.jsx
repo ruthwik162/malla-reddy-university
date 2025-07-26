@@ -12,86 +12,213 @@ import {
   FiSearch,
   FiFilter,
   FiChevronDown,
-  FiChevronUp
+  FiChevronUp,
+  FiUsers,
+  FiPhone,
+  FiMail,
+  FiStar,
+  FiMapPin
 } from 'react-icons/fi';
 import { toast } from 'react-hot-toast';
 import { useAppContext } from '../AppContext/AppContext';
 
-const AdminBlockPage = () => {
+const BlockDetailsPage = () => {
   const { blockId } = useParams();
   const navigate = useNavigate();
-  const [block, setBlock] = useState(null);
+  const [blockData, setBlockData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedPlans, setExpandedPlans] = useState({});
-  const [filterOccupied, setFilterOccupied] = useState('all');
+  const [expandedRooms, setExpandedRooms] = useState({});
+  const [filter, setFilter] = useState('all');
+  const [planFilter, setPlanFilter] = useState('all');
+  const [userDetails, setUserDetails] = useState({});
   const {url} = useAppContext();
 
-  const blockRooms = block?.rooms?.filter(b => b.occupied).length || 0;
-  const totalRooms = block?.rooms?.length || 0;
-  const occupancyRate = totalRooms > 0 ? Math.round((blockRooms / totalRooms) * 100) : 0;
-
-const fetchBlock = async () => {
-  try {
-    setLoading(true);
-    const res = await axios.get(`${url}/user/blocks/room-details/${blockId}`);
-    
-    if (res.data && res.data.blockId === blockId) {
-      setBlock(res.data);
-      setError('');
-    } else {
-      setError("Block not found");
-      toast.error("Block not found");
+  const fetchUserDetails = async (userId) => {
+    try {
+      if (!userDetails[userId]) {
+        const response = await axios.get(`${url}/user/register/${userId}`);
+        if (response.data?.success && response.data.user) {
+          setUserDetails(prev => ({
+            ...prev,
+            [userId]: response.data.user
+          }));
+        } else {
+          throw new Error('User data not found');
+        }
+      }
+    } catch (err) {
+      console.error(`Error fetching user ${userId}:`, err);
+      setUserDetails(prev => ({
+        ...prev,
+        [userId]: { 
+          username: 'Unknown User',
+          email: 'N/A',
+          mobile: 'N/A',
+          error: true
+        }
+      }));
     }
-  } catch (err) {
-    console.error(err);
-    setError("Server error while fetching block details.");
-    toast.error("Failed to fetch block details");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
+  const fetchBlockData = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await axios.get(`${url}/user/blocks/${blockId}`);
+      
+      if (!response.data?.block) {
+        throw new Error('Block data not found');
+      }
+
+      const block = response.data.block;
+      const rooms = Array.isArray(block.rooms) ? block.rooms : [];
+
+      // Group rooms by plan
+      const roomsByPlan = rooms.reduce((acc, room) => {
+        const planId = room.plan;
+        if (!acc[planId]) {
+          acc[planId] = {
+            planId,
+            rooms: [],
+            totalBeds: 0,
+            occupiedBeds: 0
+          };
+        }
+        
+        acc[planId].rooms.push(room);
+        acc[planId].totalBeds += room.capacity || 1;
+        acc[planId].occupiedBeds += room.users?.length || 0;
+        
+        return acc;
+      }, {});
+
+      // Get plan details
+      const planDetails = response.data.plans || {};
+
+      const completeData = {
+        ...block,
+        roomsByPlan: Object.entries(roomsByPlan).map(([planId, planData]) => ({
+          ...planData,
+          planDetails: planDetails[planId] || {
+            name: `Plan ${planId.slice(-3)}`,
+            description: 'Standard plan'
+          }
+        }))
+      };
+
+      setBlockData(completeData);
+
+      // Pre-fetch user details for all users in the block
+      const allUserIds = rooms.flatMap(room => room.users || []);
+      await Promise.all(allUserIds.map(fetchUserDetails));
+
+    } catch (err) {
+      console.error("Error fetching block data:", err);
+      setError(err.message || "Failed to fetch block details");
+      toast.error(err.message || "Failed to fetch block details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchRoomDetails = async (roomNumber) => {
+    try {
+      const response = await axios.get(
+        `${url}/user/blocks/${blockId}/${roomNumber}`
+      );
+      
+      await Promise.all(response.data.users?.map(fetchUserDetails) || []);
+      
+      return response.data;
+    } catch (err) {
+      console.error(`Error fetching room ${roomNumber}:`, err);
+      toast.error(`Failed to fetch room ${roomNumber}`);
+      return null;
+    }
+  };
 
   useEffect(() => {
-    fetchBlock();
+    fetchBlockData();
   }, [blockId]);
 
-  const togglePlanExpansion = (plan) => {
+  const togglePlanExpansion = (planId) => {
     setExpandedPlans(prev => ({
       ...prev,
-      [plan]: !prev[plan]
+      [planId]: !prev[planId]
     }));
   };
 
-  const roomsByPlan = block?.rooms?.reduce((acc, room) => {
-    const plan = room.planName || "Standard Plan";
-    if (!acc[plan]) acc[plan] = [];
-    acc[plan].push(room);
-    return acc;
-  }, {});
-
-  // Filter and search functionality
-  const filteredRoomsByPlan = roomsByPlan ? Object.entries(roomsByPlan).reduce((acc, [plan, rooms]) => {
-    const filteredRooms = rooms.filter(room => {
-      const matchesSearch = searchTerm === '' || 
-        room.roomNumber.toString().includes(searchTerm) ||
-        (room.occupantName && room.occupantName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (room.occupantEmail && room.occupantEmail.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      const matchesFilter = filterOccupied === 'all' || 
-        (filterOccupied === 'occupied' && room.occupied) || 
-        (filterOccupied === 'available' && !room.occupied);
-      
-      return matchesSearch && matchesFilter;
-    });
-
-    if (filteredRooms.length > 0) {
-      acc[plan] = filteredRooms;
+  const toggleRoomExpansion = async (roomNumber) => {
+    if (!expandedRooms[roomNumber]) {
+      const roomDetails = await fetchRoomDetails(roomNumber);
+      if (roomDetails) {
+        setBlockData(prev => ({
+          ...prev,
+          rooms: prev.rooms.map(room => 
+            room.roomNumber === roomNumber ? roomDetails : room
+          ),
+          roomsByPlan: prev.roomsByPlan.map(plan => ({
+            ...plan,
+            rooms: plan.rooms.map(room =>
+              room.roomNumber === roomNumber ? roomDetails : room
+            )
+          }))
+        }));
+      }
     }
-    return acc;
-  }, {}) : {};
+
+    setExpandedRooms(prev => ({
+      ...prev,
+      [roomNumber]: !prev[roomNumber]
+    }));
+  };
+
+  const filterRooms = (rooms) => {
+    return rooms.filter(room => {
+      // Search term matching
+      const matchesSearch = searchTerm === '' || 
+        room.roomNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        room.users?.some(userId => {
+          const user = userDetails[userId];
+          return user?.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                 user?.email?.toLowerCase().includes(searchTerm.toLowerCase());
+        });
+      
+      // Filter matching
+      const matchesFilter = filter === 'all' || 
+        (filter === 'occupied' && (room.users?.length || 0) > 0) || 
+        (filter === 'available' && (room.users?.length || 0) < (room.capacity || 1));
+      
+      // Plan filter matching
+      const matchesPlan = planFilter === 'all' || room.plan === planFilter;
+      
+      return matchesSearch && matchesFilter && matchesPlan;
+    });
+  };
+
+  const calculateStats = () => {
+    if (!blockData) return {
+      totalPlans: 0,
+      totalRooms: 0,
+      totalBeds: 0,
+      occupiedBeds: 0,
+      occupancyRate: 0
+    };
+
+    return {
+      totalPlans: blockData.roomsByPlan.length,
+      totalRooms: blockData.rooms.length,
+      totalBeds: blockData.rooms.reduce((sum, room) => sum + (room.capacity || 1), 0),
+      occupiedBeds: blockData.rooms.reduce((sum, room) => sum + (room.users?.length || 0), 0),
+      occupancyRate: blockData.rooms.reduce((sum, room) => sum + (room.users?.length || 0), 0) / 
+                   blockData.rooms.reduce((sum, room) => sum + (room.capacity || 1), 0) * 100 || 0
+    };
+  };
+
+  const stats = calculateStats();
 
   if (loading) return (
     <div className="flex justify-center items-center h-screen bg-gray-50">
@@ -116,9 +243,9 @@ const fetchBlock = async () => {
   );
 
   return (
-    <div className="w-full min-h-screen  bg-white  p-4 md:p-6">
+    <div className="w-full min-h-screen bg-gray-50 p-4  md:p-6">
       {/* Header Section */}
-      <div className="  p-6 mb-8 pt-30 w-full">
+      <div className="bg-white rounded-xl mt-25 shadow-sm p-6 mb-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <button
@@ -133,8 +260,8 @@ const fetchBlock = async () => {
                 <FiHome size={20} />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-800">{block.blockId} Block</h1>
-                <p className="text-sm text-gray-500">Hostel Management System</p>
+                <h1 className="text-xl font-bold text-gray-800">{blockData?.name || blockId}</h1>
+                <p className="text-sm text-gray-500 capitalize">{blockData?.gender} Block</p>
               </div>
             </div>
           </div>
@@ -146,198 +273,263 @@ const fetchBlock = async () => {
               </div>
               <div>
                 <p className="text-xs text-gray-500">Occupancy</p>
-                <p className="font-bold">{blockRooms}/{totalRooms} ({occupancyRate}%)</p>
+                <p className="font-bold">
+                  {stats.occupiedBeds}/{stats.totalBeds} ({Math.round(stats.occupancyRate)}%)
+                </p>
               </div>
             </div>
 
             <button
-              onClick={fetchBlock}
+              onClick={fetchBlockData}
               className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-3 rounded-lg transition-colors shadow-sm"
             >
-              <FiRefreshCw className="" />
+              <FiRefreshCw />
               <span>Refresh Data</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Stats and Filters */}
-      <div className="max-w-7xl mx-auto">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-indigo-500 hover:shadow-md transition-shadow">
-            <h3 className="text-sm font-medium text-gray-500 mb-1">Total Beds</h3>
-            <p className="text-3xl font-bold text-gray-800">{totalRooms}</p>
-            <p className="text-xs text-gray-500 mt-1">Across all rooms</p>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-indigo-500">
+          <h3 className="text-xs font-medium text-gray-500 mb-1">Plans</h3>
+          <p className="text-2xl font-bold text-gray-800">{stats.totalPlans}</p>
+        </div>
+        <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-500">
+          <h3 className="text-xs font-medium text-gray-500 mb-1">Total Rooms</h3>
+          <p className="text-2xl font-bold text-blue-600">{stats.totalRooms}</p>
+        </div>
+        <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-green-500">
+          <h3 className="text-xs font-medium text-gray-500 mb-1">Available Beds</h3>
+          <p className="text-2xl font-bold text-green-600">{stats.totalBeds - stats.occupiedBeds}</p>
+        </div>
+        <div className="bg-white p-4 rounded-xl shadow-sm border-l-4 border-red-500">
+          <h3 className="text-xs font-medium text-gray-500 mb-1">Occupied Beds</h3>
+          <p className="text-2xl font-bold text-red-600">{stats.occupiedBeds}</p>
+        </div>
+      </div>
+
+      {/* Search and Filter Bar */}
+      <div className="bg-white rounded-xl shadow-sm p-4 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+            <FiSearch />
           </div>
-          <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500 hover:shadow-md transition-shadow">
-            <h3 className="text-sm font-medium text-gray-500 mb-1">Available Beds</h3>
-            <p className="text-3xl font-bold text-green-600">{totalRooms - blockRooms}</p>
-            <p className="text-xs text-gray-500 mt-1">{100 - occupancyRate}% availability</p>
+          <input
+            type="text"
+            placeholder="Search by room or occupant..."
+            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+            <FiFilter />
           </div>
-          <div className="bg-white p-6 rounded-xl shadow-sm border-l-4 border-red-500 hover:shadow-md transition-shadow">
-            <h3 className="text-sm font-medium text-gray-500 mb-1">Occupied Beds</h3>
-            <p className="text-3xl font-bold text-red-600">{blockRooms}</p>
-            <p className="text-xs text-gray-500 mt-1">{occupancyRate}% occupancy</p>
+          <select
+            className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg appearance-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 bg-white w-full"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          >
+            <option value="all">All Beds</option>
+            <option value="occupied">Occupied Only</option>
+            <option value="available">Available Only</option>
+          </select>
+          <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-gray-400">
+            <FiChevronDown />
           </div>
         </div>
 
-        {/* Search and Filter Bar */}
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-6 flex flex-col sm:flex-row gap-4 items-center">
-          <div className="relative flex-grow w-full sm:w-auto">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-              <FiSearch />
-            </div>
-            <input
-              type="text"
-              placeholder="Search by bed number or occupant..."
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+            <FiCalendar />
           </div>
-          
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <div className="relative flex-grow sm:flex-grow-0">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                <FiFilter />
-              </div>
-              <select
-                className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg appearance-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 bg-white"
-                value={filterOccupied}
-                onChange={(e) => setFilterOccupied(e.target.value)}
-              >
-                <option value="all">All Beds</option>
-                <option value="occupied">Occupied Only</option>
-                <option value="available">Available Only</option>
-              </select>
-              <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-gray-400">
-                <FiChevronDown />
-              </div>
-            </div>
-            
-            <button 
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm"
-              onClick={() => {
-                // Add new bed functionality
-                toast.success("Add new bed functionality would go here");
-              }}
-            >
-              <FiPlus />
-              <span>Add Bed</span>
-            </button>
+          <select
+            className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg appearance-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 bg-white w-full"
+            value={planFilter}
+            onChange={(e) => setPlanFilter(e.target.value)}
+          >
+            <option value="all">All Plans</option>
+            {blockData?.roomsByPlan?.map((plan) => (
+              <option key={plan.planId} value={plan.planId}>
+                {plan.planDetails.name}
+              </option>
+            ))}
+          </select>
+          <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-gray-400">
+            <FiChevronDown />
           </div>
         </div>
+      </div>
 
-        {/* Room Cards */}
-        <div className="mb-8">
-          <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <FiCalendar className="text-indigo-600" />
-            Beds Grouped by Plan
-          </h2>
+      {/* Plans and Rooms Section */}
+      <div className="mb-8">
+        <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <FiCalendar className="text-indigo-600" />
+          Hostel Plans
+        </h2>
 
-          {Object.keys(filteredRoomsByPlan).length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-              <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 mb-4">
-                <FiHome size={40} />
-              </div>
-              <h3 className="text-xl font-bold text-gray-700 mb-2">No Matching Beds Found</h3>
-              <p className="text-gray-500 mb-6">Try adjusting your search or filter criteria</p>
+        {blockData?.roomsByPlan?.length === 0 ? (
+          <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+            <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 mb-4">
+              <FiHome size={40} />
             </div>
-          ) : (
-            Object.entries(filteredRoomsByPlan).map(([plan, rooms]) => {
-              // Group beds into rooms of 5
-              const groupedRooms = [];
-              for (let i = 0; i < rooms.length; i += 5) {
-                groupedRooms.push(rooms.slice(i, i + 5));
-              }
-
-              const isExpanded = expandedPlans[plan] !== false;
+            <h3 className="text-xl font-bold text-gray-700 mb-2">No Rooms Found</h3>
+            <p className="text-gray-500 mb-6">This block doesn't have any rooms yet</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {blockData?.roomsByPlan?.filter(plan => planFilter === 'all' || plan.planId === planFilter)
+              .map((plan) => {
+              const isPlanExpanded = expandedPlans[plan.planId] !== false;
+              const filteredRooms = filterRooms(plan.rooms);
 
               return (
-                <div key={plan} className="mb-6">
+                <div key={plan.planId} className="bg-white rounded-xl shadow-sm overflow-hidden">
+                  {/* Plan Header */}
                   <div 
-                    className="flex justify-between items-center bg-white p-4 rounded-t-lg cursor-pointer hover:bg-gray-50 border-b border-gray-200"
-                    onClick={() => togglePlanExpansion(plan)}
+                    className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50"
+                    onClick={() => togglePlanExpansion(plan.planId)}
                   >
-                    <h3 className="text-lg font-bold text-gray-700 flex items-center gap-2">
-                      {plan}
-                      <span className="text-sm font-normal bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">
-                        {rooms.length} beds
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-indigo-100 rounded-full text-indigo-600">
+                        <FiStar />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-700">{plan.planDetails.name}</h3>
+                        <p className="text-sm text-gray-500">{plan.planDetails.description}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-medium">
+                        {filteredRooms.length} rooms
                       </span>
-                    </h3>
-                    <div className="text-gray-500">
-                      {isExpanded ? <FiChevronUp /> : <FiChevronDown />}
+                      <div className="text-gray-500">
+                        {isPlanExpanded ? <FiChevronUp /> : <FiChevronDown />}
+                      </div>
                     </div>
                   </div>
 
-                  {isExpanded && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 bg-gray-50 p-4 rounded-b-lg">
-                      {groupedRooms.map((beds, index) => (
-                        <div 
-                          key={`${plan}-room-${index}`} 
-                          className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg border-t-4 border-indigo-500 transition-all"
-                        >
-                          <div className="p-5 bg-gradient-to-r from-indigo-50 to-blue-50">
-                            <h3 className="text-lg font-bold text-gray-800">Room {index + 1}</h3>
-                            <p className="text-sm text-gray-500">{beds.length} beds</p>
-                          </div>
-                          <div className="p-5 space-y-4 border-t grid grid-cols-1 gap-4 border-gray-100">
-                            {beds.map((bed) => (
-                              <div
-                                key={`${bed.roomNumber}`}
-                                className={`flex items-start gap-4 p-3 rounded-lg shadow-sm transition-colors ${
-                                  bed.occupied 
-                                    ? 'bg-red-50 hover:bg-red-100' 
-                                    : 'bg-green-50 hover:bg-green-100'
-                                }`}
-                              >
-                                <div className={`p-2 rounded-full ${
-                                  bed.occupied 
-                                    ? 'bg-red-100 text-red-600' 
-                                    : 'bg-green-100 text-green-600'
+                  {/* Rooms List */}
+                  {isPlanExpanded && filteredRooms.length > 0 && (
+                    <div className="border-t border-gray-200 divide-y divide-gray-200">
+                      {filteredRooms.map((room) => {
+                        const isRoomExpanded = expandedRooms[room.roomNumber] !== false;
+                        const occupiedBeds = room.users?.length || 0;
+                        const availableBeds = (room.capacity || 1) - occupiedBeds;
+
+                        return (
+                          <div key={room.roomNumber} className="p-3 hover:bg-gray-50">
+                            {/* Room Header */}
+                            <div 
+                              className="flex justify-between items-center cursor-pointer"
+                              onClick={() => toggleRoomExpansion(room.roomNumber)}
+                            >
+                              <div>
+                                <h4 className="font-medium text-gray-800">{room.roomNumber}</h4>
+                                <p className="text-xs text-gray-500">
+                                  {room.capacity || 1} beds • {room.gender || 'Mixed'}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  occupiedBeds > 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
                                 }`}>
-                                  <FiUser />
+                                  {occupiedBeds}/{room.capacity || 1}
+                                </span>
+                                <div className="text-gray-400">
+                                  {isRoomExpanded ? <FiChevronUp /> : <FiChevronDown />}
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-semibold text-gray-700 truncate">
-                                    Bed {bed.roomNumber}
-                                  </p>
-                                  {bed.occupied ? (
-                                    <>
-                                      <p className="text-sm text-gray-600 truncate">
-                                        {bed.occupantName}
-                                      </p>
-                                      <p className="text-xs text-gray-500 truncate">
-                                        {bed.occupantEmail}
-                                      </p>
-                                    </>
-                                  ) : (
-                                    <p className="text-sm text-gray-600">Available</p>
+                              </div>
+                            </div>
+
+                            {/* Room Details */}
+                            {isRoomExpanded && (
+                              <div className="mt-3 pl-2">
+                                <div className="space-y-3">
+                                  {/* Occupied Beds */}
+                                  {occupiedBeds > 0 && (
+                                    <div>
+                                      <h5 className="text-xs font-medium text-gray-700 mb-1">Occupants</h5>
+                                      <div className="space-y-2">
+                                        {room.users?.map((userId, index) => {
+                                          const user = userDetails[userId] || {
+                                            username: 'Loading...',
+                                            email: '',
+                                            mobile: '',
+                                            error: false
+                                          };
+                                          
+                                          return (
+                                            <div key={`${room.roomNumber}-user-${index}`} 
+                                              className={`rounded-lg p-2 ${user.error ? 'bg-yellow-50' : 'bg-red-50'}`}>
+                                              <div className="flex items-start gap-2">
+                                                <div className={`p-1 rounded-full ${user.error ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'}`}>
+                                                  <FiUser size={14} />
+                                                </div>
+                                                <div className="flex-1">
+                                                  <p className="text-sm font-medium text-gray-800">
+                                                    {user.username}
+                                                    {user.error && <span className="text-xs text-yellow-600 ml-1">(Error)</span>}
+                                                  </p>
+                                                  <div className="flex items-center gap-1 text-xs text-gray-600 mt-1">
+                                                    <FiMail size={12} />
+                                                    <span className="truncate">{user.email || 'N/A'}</span>
+                                                  </div>
+                                                  <div className="flex items-center gap-1 text-xs text-gray-600 mt-1">
+                                                    <FiPhone size={12} />
+                                                    <span>{user.mobile || 'N/A'}</span>
+                                                  </div>
+                                                </div>
+                                                <span className="text-xs bg-white px-1.5 py-0.5 rounded-full text-gray-700">
+                                                  Bed {index + 1}
+                                                </span>
+                                              </div>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {/* Available Beds */}
+                                  {availableBeds > 0 && (
+                                    <div>
+                                      <h5 className="text-xs font-medium text-gray-700 mb-1">Available</h5>
+                                      <div className="grid grid-cols-2 gap-2">
+                                        {Array.from({ length: availableBeds }).map((_, index) => (
+                                          <div key={`${room.roomNumber}-available-${index}`} 
+                                            className="bg-green-50 rounded-lg p-2 text-center">
+                                            <div className="flex flex-col items-center">
+                                              <div className="p-1 bg-green-100 rounded-full text-green-600 mb-1">
+                                                <FiUser size={14} />
+                                              </div>
+                                              <span className="text-xs font-medium">Bed {occupiedBeds + index + 1}</span>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
                                   )}
                                 </div>
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  bed.occupied 
-                                    ? 'bg-red-100 text-red-800' 
-                                    : 'bg-green-100 text-green-800'
-                                }`}>
-                                  {bed.occupied ? 'Occupied' : 'Available'}
-                                </span>
                               </div>
-                            ))}
+                            )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
               );
-            })
-          )}
-        </div>
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default AdminBlockPage;
+export default BlockDetailsPage;
